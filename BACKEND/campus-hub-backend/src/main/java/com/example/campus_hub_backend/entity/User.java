@@ -1,7 +1,10 @@
 package com.example.campus_hub_backend.entity;
 
 import java.time.LocalDateTime;
+
+import com.example.campus_hub_backend.enumtype.AuthProvider;
 import com.example.campus_hub_backend.enumtype.Role;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -34,6 +37,13 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AuthProvider provider;
+
+    @Column(length = 255)
+    private String providerId;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -44,6 +54,14 @@ public class User {
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+
+        if (this.role == null) {
+            this.role = Role.USER;
+        }
+
+        if (this.provider == null) {
+            this.provider = AuthProvider.LOCAL;
+        }
     }
 
     @PreUpdate
@@ -53,10 +71,6 @@ public class User {
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getName() {
@@ -72,7 +86,7 @@ public class User {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        this.email = email == null ? null : email.trim().toLowerCase();
     }
 
     public String getPassword() {
@@ -91,6 +105,22 @@ public class User {
         this.role = role;
     }
 
+    public AuthProvider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(AuthProvider provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -106,5 +136,4 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-
 }

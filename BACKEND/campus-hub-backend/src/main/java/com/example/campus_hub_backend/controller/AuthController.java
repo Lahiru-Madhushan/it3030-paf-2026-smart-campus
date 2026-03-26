@@ -102,4 +102,25 @@ public class AuthController {
 
         return ResponseEntity.ok("Password has been reset successfully");
     }
+
+
+    @GetMapping("/oauth-success")
+public ResponseEntity<String> oauthSuccess(
+        @RequestParam String token,
+        @RequestParam String email,
+        @RequestParam String role,
+        @RequestParam String name) {
+
+    String response = """
+            Google OAuth login successful!
+
+            Token: %s
+
+            Email: %s
+            Role: %s
+            Name: %s
+            """.formatted(token, email, role, name);
+
+    return ResponseEntity.ok(response);
+}
 }
