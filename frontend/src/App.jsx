@@ -1,120 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import LandingPage from './components/LandingPage'
+import RegisterPage from './components/UserManagement/RegisterPage'
+import LoginPage from './components/UserManagement/LoginPage'
+import ForgotPasswordPage from './components/UserManagement/ForgotPasswordPage'
+import OAuthSuccessPage from './components/UserManagement/OAuthSuccessPage'
 import './App.css'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import AdminDashboard from './components/dashboard/AdminDashboard'
+import TechnicianDasboard from './components/dashboard/TechnicianDashboard'
+import UserDashboard from './components/dashboard/UserDashboard'
+import ProtectedRoute from './components/ProtectedRoute'
+import RoleRoute from './components/RoleRoute'
+import { ROLES } from './utils/constants'
+import UserProfile from './components/UserManagement/UserProfile'
+import UserManagement from './components/UserManagement/UserManagement'
+import UserHomePage from './components/UserHomePage'
 
 function App() {
-  const [count, setCount] = useState(0)
+ 
+ return (
+  <Routes>  
+          <Route path="/" element={<LandingPage />} />  
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/oauth-success" element={<OAuthSuccessPage />} />
+      <Route path="/api/auth/oauth-success" element={<OAuthSuccessPage />} />
+      <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
+      <Route path="/profile" element={<UserProfile />} />
+      <Route path="/user/home" element={<UserHomePage />} />
+     
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" >
+          <Route index element={<Navigate to="user" replace />} />
+          
 
-      <div className="ticks"></div>
+          <Route element={<RoleRoute allowedRoles={[ROLES.USER]} />}>
+            <Route path="user" element={<UserHomePage />} />
+          </Route>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <Route element={<RoleRoute allowedRoles={[ROLES.ADMIN]} />}>
+            <Route path="admin" element={<AdminDashboard />}>
+              
+              <Route path="users" element={<UserManagement />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+              {/* <Route path="resources" element={<ResourceManagement />} /> */}
+
+              {/* <Route path="bookings" element={<BookingManagement />} /> */}
+
+            </Route>
+          </Route>
+
+          <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]} />}>
+            <Route path="technician" element={<TechnicianDasboard />} />
+          </Route>
+       </Route>
+        </Route>
+      <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
+      <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
+     {/* <Route path="/admin/resources" element={<Navigate to="/dashboard/admin/resources" replace />} />
+      <Route path="/admin/bookings" element={<Navigate to="/dashboard/admin/bookings" replace />} />   */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+  </Routes>
   )
 }
 
