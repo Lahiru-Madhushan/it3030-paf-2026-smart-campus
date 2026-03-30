@@ -62,11 +62,11 @@ public class UserService {
         try {
             newRole = Role.valueOf(inputRole);
         } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid role. Allowed roles: USER, ADMIN");
+            throw new BadRequestException("Invalid role. Allowed roles: USER, ADMIN, TECHNICIAN");
         }
 
-        if (user.getEmail().equalsIgnoreCase(currentAdminEmail) && newRole == Role.USER) {
-            throw new BadRequestException("Admin cannot downgrade their own role to USER");
+        if (user.getEmail().equalsIgnoreCase(currentAdminEmail) && newRole != Role.ADMIN) {
+            throw new BadRequestException("Admin cannot change their own role from ADMIN");
         }
 
         user.setRole(newRole);

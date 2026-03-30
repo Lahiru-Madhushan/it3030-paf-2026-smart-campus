@@ -47,8 +47,11 @@ public class AdminUserController {
 
     @PatchMapping("/{id}/role")
     public ResponseEntity<UserResponse> updateRole(@PathVariable Long id,
-                                                   @Valid @RequestBody UpdateRoleRequest request,
+                                                   @RequestBody String requestBody,
                                                    Authentication authentication) {
+        String role = extractRole(requestBody);
+        UpdateRoleRequest request = new UpdateRoleRequest();
+        request.setRole(role);
         return ResponseEntity.ok(userService.updateRole(id, request, authentication.getName()));
     }
 
@@ -56,5 +59,29 @@ public class AdminUserController {
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long id, Authentication authentication) {
         userService.deleteUser(id, authentication.getName());
         return ResponseEntity.ok(new ApiResponse(true, "User deleted successfully"));
+    }
+
+    private String extractRole(String requestBody) {
+        if (requestBody == null || requestBody.isBlank()) {
+            return "";
+        }
+
+        String trimmed = requestBody.trim();
+        if (trimmed.startsWith("{")) {
+            int keyIndex = trimmed.indexOf("\"role\"");
+            if (keyIndex >= 0) {
+                int colonIndex = trimmed.indexOf(':', keyIndex);
+                if (colonIndex >= 0) {
+                    String valuePart = trimmed.substring(colonIndex + 1).trim();
+                    if (valuePart.endsWith("}")) {
+                        valuePart = valuePart.substring(0, valuePart.length() - 1).trim();
+                    }
+                    return valuePart.replace("\"", "").trim();
+                }
+            }
+            return "";
+        }
+
+        return trimmed.replace("\"", "");
     }
 }
