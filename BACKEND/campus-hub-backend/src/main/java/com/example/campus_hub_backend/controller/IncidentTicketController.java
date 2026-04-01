@@ -42,6 +42,13 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticketService.getMyTickets(email));
     }
 
+    // GET /api/tickets/assigned — Get tickets assigned to me (TECHNICIAN)
+    @GetMapping("/assigned")
+    public ResponseEntity<List<TicketResponseDTO>> getAssignedTickets(Principal principal) {
+        String email = principal.getName();
+        return ResponseEntity.ok(ticketService.getAssignedTickets(email));
+    }
+
     // GET /api/tickets/{id} — Get one ticket by id
     @GetMapping("/{id}")
     public ResponseEntity<TicketResponseDTO> getTicketById(@PathVariable Long id) {

@@ -59,6 +59,16 @@ public class IncidentTicketService {
                 .collect(Collectors.toList());
     }
 
+    // Get tickets assigned to logged in technician
+    public List<TicketResponseDTO> getAssignedTickets(String technicianEmail) {
+        User technician = userRepository.findByEmail(technicianEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return ticketRepository.findByAssignedTo(technician)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     // Get one ticket by id
     public TicketResponseDTO getTicketById(Long id) {
         IncidentTicket ticket = ticketRepository.findById(id)
