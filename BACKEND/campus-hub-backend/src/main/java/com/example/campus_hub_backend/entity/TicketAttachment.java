@@ -1,5 +1,6 @@
 package com.example.campus_hub_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +31,7 @@ public class TicketAttachment {
     private LocalDateTime uploadedAt = LocalDateTime.now();
 
     // Which ticket this attachment belongs to
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)
     private IncidentTicket ticket;
