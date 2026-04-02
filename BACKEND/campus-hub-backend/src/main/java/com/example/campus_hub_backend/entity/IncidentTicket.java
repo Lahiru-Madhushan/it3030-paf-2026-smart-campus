@@ -3,6 +3,7 @@ package com.example.campus_hub_backend.entity;
 import com.example.campus_hub_backend.enumtype.TicketCategory;
 import com.example.campus_hub_backend.enumtype.TicketPriority;
 import com.example.campus_hub_backend.enumtype.TicketStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -63,9 +64,11 @@ public class IncidentTicket {
     @JoinColumn(name = "technician_id")
     private User assignedTo;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TicketComment> comments;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "ticket", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TicketAttachment> attachments;
 
