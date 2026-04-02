@@ -14,6 +14,9 @@ import { ROLES } from './utils/constants'
 import UserProfile from './components/UserManagement/UserProfile'
 import UserManagement from './components/UserManagement/UserManagement'
 import UserHomePage from './components/UserHomePage'
+import TicketList from './components/incidents/TicketList'
+import TicketForm from './components/incidents/TicketForm'
+import TicketDetail from './components/incidents/TicketDetail'
 
 function App() {
  
@@ -28,7 +31,11 @@ function App() {
       <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
       <Route path="/profile" element={<UserProfile />} />
       <Route path="/user/home" element={<UserHomePage />} />
-     
+      <Route path="/incidents" element={<TicketList />} />
+      <Route path="/incidents/create" element={<TicketForm />} />
+      <Route path="/incidents/:id" element={<TicketDetail />} />
+      <Route path="/technician/incidents" element={<TicketList />} />
+      <Route path="/technician/incidents/:id" element={<TicketDetail />} />
 
     <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" >
@@ -43,7 +50,7 @@ function App() {
             <Route path="admin" element={<AdminDashboard />}>
               
               <Route path="users" element={<UserManagement />} />
-
+              <Route path="incidents" element={<TicketList />} />
               {/* <Route path="resources" element={<ResourceManagement />} /> */}
 
               {/* <Route path="bookings" element={<BookingManagement />} /> */}
@@ -53,6 +60,7 @@ function App() {
 
           <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]} />}>
             <Route path="technician" element={<TechnicianDasboard />} />
+              <Route path="incidents" element={<TicketList />} />
           </Route>
        </Route>
         </Route>
