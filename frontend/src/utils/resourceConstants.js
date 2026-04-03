@@ -1,0 +1,18 @@
+export const RESOURCE_TYPES = ['ROOM', 'LAB', 'EQUIPMENT']
+
+export const RESOURCE_STATUSES = [
+  'ACTIVE',
+  'OUT_OF_SERVICE',
+  'UNDER_MAINTENANCE',
+  'INACTIVE',
+]
+
+export const RESOURCE_CATEGORIES = [
+  'LECTURE_HALL',
+  'COMPUTER_LAB',
+  'MEETING_ROOM',
+  'PROJECTOR',
+  'CAMERA',
+  'MICROPHONE',
+  'SPEAKER',
+]

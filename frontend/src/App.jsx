@@ -17,6 +17,11 @@ import UserHomePage from './components/UserHomePage'
 import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
+import ResourceListPage from './components/resources/ResourceListPage'
+import ResourceCreatePage from './components/resources/ResourceCreatePage'
+import ResourceDetailsPage from './components/resources/ResourceDetailsPage'
+import ResourceEditPage from './components/resources/ResourceEditPage'
+import './styles/resources.css'
 
 function App() {
  
@@ -51,7 +56,10 @@ function App() {
               
               <Route path="users" element={<UserManagement />} />
               <Route path="incidents" element={<TicketList />} />
-              {/* <Route path="resources" element={<ResourceManagement />} /> */}
+              <Route path="resources" element={<ResourceListPage />} />
+              <Route path="resources/new" element={<ResourceCreatePage />} />
+              <Route path="resources/:id" element={<ResourceDetailsPage />} />
+              <Route path="resources/:id/edit" element={<ResourceEditPage />} />
 
               {/* <Route path="bookings" element={<BookingManagement />} /> */}
 
@@ -66,6 +74,7 @@ function App() {
         </Route>
       <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
       <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
+      <Route path="/admin/resources" element={<Navigate to="/dashboard/admin/resources" replace />} />
      {/* <Route path="/admin/resources" element={<Navigate to="/dashboard/admin/resources" replace />} />
       <Route path="/admin/bookings" element={<Navigate to="/dashboard/admin/bookings" replace />} />   */}
       <Route path="*" element={<Navigate to="/login" replace />} />
