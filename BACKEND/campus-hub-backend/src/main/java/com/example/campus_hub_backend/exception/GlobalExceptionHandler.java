@@ -25,14 +25,9 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(BookingConflictException.class)
-    public ResponseEntity<Map<String, Object>> handleBookingConflict(BookingConflictException ex) {
+    @ExceptionHandler(DuplicateResourceCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResourceCode(DuplicateResourceCodeException ex) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
-    }
-
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
-        return buildResponse(HttpStatus.FORBIDDEN, "Access denied");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

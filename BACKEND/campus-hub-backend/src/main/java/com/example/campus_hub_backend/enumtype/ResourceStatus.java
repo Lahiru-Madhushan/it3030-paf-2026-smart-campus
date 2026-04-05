@@ -2,5 +2,8 @@ package com.example.campus_hub_backend.enumtype;
 
 public enum ResourceStatus {
     AVAILABLE,
-    OUT_OF_SERVICE
+    OUT_OF_SERVICE,
+    ACTIVE,
+    UNDER_MAINTENANCE,
+    INACTIVE
 }

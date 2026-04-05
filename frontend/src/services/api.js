@@ -1,13 +1,27 @@
 import { API_BASE_URL } from '../utils/constants'
 
 async function parseResponse(response) {
-  const text = await response.text()
+  if (response.status === 204 || response.headers.get('content-length') === '0') {
+    return null
+  }
+
+  const contentType = response.headers.get('content-type')
   let data = null
-  if (text) {
+
+  if (contentType && contentType.includes('application/json')) {
     try {
-      data = JSON.parse(text)
+      data = await response.json()
     } catch {
-      data = { message: text }
+      data = null
+    }
+  } else {
+    const text = await response.text()
+    if (text) {
+      try {
+        data = JSON.parse(text)
+      } catch {
+        data = { message: text }
+      }
     }
   }
 
@@ -35,6 +49,7 @@ export async function authRequest(path, token, options = {}) {
   return apiRequest(path, {
     ...options,
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
       ...(options.headers || {}),
     },
