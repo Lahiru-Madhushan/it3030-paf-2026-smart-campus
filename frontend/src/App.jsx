@@ -1,8 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { BookingProvider } from './contexts/BookingContext'
 import { UserProvider } from './contexts/UserContext'
-import BookingModuleLayout from './routes/BookingModuleLayout'
-import ProtectedRoute from './routes/ProtectedRoute'
+import ProtectedRoute from './components/ProtectedRoute'
 import AdminBookingsPage from './pages/AdminBookingsPage'
 import BookingFormPage from './pages/BookingFormPage'
 import MyBookingsPage from './pages/MyBookingsPage'
@@ -15,8 +14,9 @@ import OAuthSuccessPage from './components/UserManagement/OAuthSuccessPage'
 import './App.css'
 import AdminDashboard from './components/dashboard/AdminDashboard'
 import TechnicianDasboard from './components/dashboard/TechnicianDashboard'
-import UserDashboard from './components/dashboard/UserDashboard'
 import RoleRoute from './components/RoleRoute'
+import UserBookingLayout from './layouts/UserBookingLayout'
+// import ResourceManagement from './components/dashboard/ResourceManagement'
 import { ROLES } from './utils/constants'
 import UserProfile from './components/UserManagement/UserProfile'
 import UserManagement from './components/UserManagement/UserManagement'
@@ -47,16 +47,24 @@ function App() {
         <Route path="/technician/incidents/:id" element={<TicketDetail />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Navigate to="user" replace />} />
+          <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
+
           <Route path="/dashboard/user" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
+
           <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
+            <Route index element={<Navigate to="bookings" replace />} />
             <Route path="users" element={<UserManagement />} />
-            <Route path="incidents" element={<TicketList />} />
-            {/* <Route path="resources" element={<ResourceManagement />} /> */}
-            {/* <Route path="bookings" element={<BookingManagement />} /> */}
+            <Route path="bookings" element={<AdminBookingsPage />} />
           </Route>
+
           <Route path="/dashboard/technician" element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]}><TechnicianDasboard /></RoleRoute>}>
             <Route path="incidents" element={<TicketList />} />
+          </Route>
+
+          <Route element={<UserBookingLayout />}>
+            <Route path="/bookings/my" element={<MyBookingsPage />} />
+            <Route path="/bookings/form" element={<BookingFormPage />} />
+            <Route path="/bookings/new" element={<BookingFormPage />} />
           </Route>
         </Route>
 
