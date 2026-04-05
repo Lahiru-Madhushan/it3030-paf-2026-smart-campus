@@ -24,6 +24,11 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(DuplicateResourceCodeException.class)
+    public ResponseEntity<Map<String, Object>> handleDuplicateResourceCode(DuplicateResourceCodeException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> validationErrors = new HashMap<>();
