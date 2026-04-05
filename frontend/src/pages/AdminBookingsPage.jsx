@@ -73,41 +73,45 @@ function AdminBookingsPage() {
   }
 
   return (
-    <section className="space-y-3">
-      <h1 className="text-2xl font-semibold text-slate-900">Admin Booking Management</h1>
-      <p className="text-sm text-slate-600">
-        Review all bookings, filter records, and approve, reject, or cancel as
-        needed.
-      </p>
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <section className="mx-auto max-w-7xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-gray-900">Admin Booking Management</h1>
+          <p className="text-base text-gray-600">
+            Review all bookings, filter records, and approve, reject, or cancel as
+            needed.
+          </p>
+        </div>
 
-      <ErrorAlert message={error} />
-      <SuccessAlert message={success} />
+        <ErrorAlert message={error} />
+        <SuccessAlert message={success} />
 
-      <FilterBar
-        filters={filters}
-        onChange={setFilters}
-        onApply={applyFilters}
-        onReset={resetFilters}
-      />
+        <FilterBar
+          filters={filters}
+          onChange={setFilters}
+          onApply={applyFilters}
+          onReset={resetFilters}
+        />
 
-      {loading ? <LoadingSpinner label="Loading all bookings..." /> : null}
+        {loading ? <LoadingSpinner label="Loading all bookings..." /> : null}
 
-      <BookingTable
-        bookings={bookings}
-        loading={loading}
-        isAdmin
-        onApprove={handleApprove}
-        onOpenReject={setSelectedBookingId}
-        onCancel={handleCancel}
-      />
+        <BookingTable
+          bookings={bookings}
+          loading={loading}
+          isAdmin
+          onApprove={handleApprove}
+          onOpenReject={setSelectedBookingId}
+          onCancel={handleCancel}
+        />
 
-      <RejectBookingModal
-        open={Boolean(selectedBookingId)}
-        loading={loading}
-        onClose={() => setSelectedBookingId(null)}
-        onConfirm={handleReject}
-      />
-    </section>
+        <RejectBookingModal
+          open={Boolean(selectedBookingId)}
+          loading={loading}
+          onClose={() => setSelectedBookingId(null)}
+          onConfirm={handleReject}
+        />
+      </section>
+    </div>
   )
 }
 

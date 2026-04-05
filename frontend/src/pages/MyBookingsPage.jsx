@@ -27,26 +27,30 @@ function MyBookingsPage() {
   }
 
   return (
-    <section className="space-y-3">
-      <h1 className="text-2xl font-semibold text-slate-900">My Bookings</h1>
-      <p className="text-sm text-slate-600">
-        Track your booking requests and cancel pending or approved bookings.
-      </p>
+    <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <section className="mx-auto max-w-7xl space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-bold text-gray-900">My Bookings</h1>
+          <p className="text-base text-gray-600">
+            Track your booking requests and cancel pending or approved bookings.
+          </p>
+        </div>
 
-      <ErrorAlert message={error} />
-      <SuccessAlert message={success} />
+        <ErrorAlert message={error} />
+        <SuccessAlert message={success} />
 
-      {loading ? <LoadingSpinner label="Loading your bookings..." /> : null}
+        {loading ? <LoadingSpinner label="Loading your bookings..." /> : null}
 
-      <BookingTable
-        bookings={myBookings}
-        loading={loading}
-        isAdmin={false}
-        onCancel={handleCancel}
-        onApprove={() => {}}
-        onOpenReject={() => {}}
-      />
-    </section>
+        <BookingTable
+          bookings={myBookings}
+          loading={loading}
+          isAdmin={false}
+          onCancel={handleCancel}
+          onApprove={() => {}}
+          onOpenReject={() => {}}
+        />
+      </section>
+    </div>
   )
 }
 

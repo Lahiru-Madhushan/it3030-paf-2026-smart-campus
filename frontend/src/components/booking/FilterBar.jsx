@@ -5,38 +5,44 @@ function FilterBar({ filters, onChange, onApply, onReset }) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4 md:items-end">
-      <label className="block space-y-1 text-sm font-medium text-slate-700">
-        Status
+    <div className="grid grid-cols-1 gap-4 rounded-2xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur-xl md:grid-cols-4 md:items-end">
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
+          Status
+        </label>
         <select
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
           name="status"
           value={filters.status}
           onChange={handleChange}
         >
-          <option value="">All</option>
-          <option value="PENDING">PENDING</option>
-          <option value="APPROVED">APPROVED</option>
-          <option value="REJECTED">REJECTED</option>
-          <option value="CANCELLED">CANCELLED</option>
+          <option value="">All Statuses</option>
+          <option value="PENDING">🕐 PENDING</option>
+          <option value="APPROVED">✓ APPROVED</option>
+          <option value="REJECTED">✗ REJECTED</option>
+          <option value="CANCELLED">⊘ CANCELLED</option>
         </select>
-      </label>
+      </div>
 
-      <label className="block space-y-1 text-sm font-medium text-slate-700">
-        Date
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
+          Date
+        </label>
         <input
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
           type="date"
           name="bookingDate"
           value={filters.bookingDate}
           onChange={handleChange}
         />
-      </label>
+      </div>
 
-      <label className="block space-y-1 text-sm font-medium text-slate-700">
-        Resource ID
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-700">
+          Resource ID
+        </label>
         <input
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm placeholder-gray-400 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
           type="number"
           name="resourceId"
           value={filters.resourceId}
@@ -44,22 +50,22 @@ function FilterBar({ filters, onChange, onApply, onReset }) {
           min="1"
           placeholder="e.g. 2"
         />
-      </label>
+      </div>
 
-      <div className="flex gap-2 md:justify-end">
+      <div className="flex gap-3">
         <button
-          className="rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="flex-1 rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-500 px-4 py-2.5 text-sm font-bold text-white shadow-md hover:from-yellow-500 hover:to-yellow-600 transition-all md:flex-none"
           type="button"
           onClick={onApply}
         >
-          Apply Filters
+          🔍 Apply
         </button>
         <button
-          className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-all md:flex-none"
           type="button"
           onClick={onReset}
         >
-          Reset
+          ⟲ Reset
         </button>
       </div>
     </div>
