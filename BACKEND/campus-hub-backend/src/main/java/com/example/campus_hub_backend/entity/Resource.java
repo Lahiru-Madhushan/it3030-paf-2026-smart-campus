@@ -1,6 +1,7 @@
 package com.example.campus_hub_backend.entity;
 
 import com.example.campus_hub_backend.enumtype.ResourceStatus;
+
 import com.example.campus_hub_backend.enumtype.ResourceType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

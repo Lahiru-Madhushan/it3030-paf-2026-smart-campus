@@ -1,0 +1,228 @@
+package com.example.campus_hub_backend.service;
+
+import com.example.campus_hub_backend.dto.BookingRequest;
+import com.example.campus_hub_backend.dto.BookingResponse;
+import com.example.campus_hub_backend.entity.Booking;
+import com.example.campus_hub_backend.entity.Resource;
+import com.example.campus_hub_backend.entity.User;
+import com.example.campus_hub_backend.enumtype.BookingStatus;
+import com.example.campus_hub_backend.enumtype.ResourceStatus;
+import com.example.campus_hub_backend.exception.BadRequestException;
+import com.example.campus_hub_backend.exception.BookingConflictException;
+import com.example.campus_hub_backend.exception.ResourceNotFoundException;
+import com.example.campus_hub_backend.repository.BookingRepository;
+import com.example.campus_hub_backend.repository.ResourceRepository;
+import com.example.campus_hub_backend.repository.UserRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+public class BookingService {
+
+    private final BookingRepository bookingRepository;
+    private final ResourceRepository resourceRepository;
+    private final UserRepository userRepository;
+
+    /** Statuses that block a time slot and should be considered for conflict checks */
+    private static final List<BookingStatus> BLOCKING_STATUSES =
+            List.of(BookingStatus.PENDING, BookingStatus.APPROVED);
+
+    public BookingService(BookingRepository bookingRepository,
+                          ResourceRepository resourceRepository,
+                          UserRepository userRepository) {
+        this.bookingRepository = bookingRepository;
+        this.resourceRepository = resourceRepository;
+        this.userRepository = userRepository;
+    }
+
+    // ─── Create Booking ────────────────────────────────────────
+
+    @Transactional
+    public BookingResponse createBooking(BookingRequest request, String userEmail) {
+        // 1. Validate time range
+        if (!request.getStartTime().isBefore(request.getEndTime())) {
+            throw new BadRequestException("Start time must be before end time");
+        }
+
+        // 2. Validate resource exists and is available
+        Resource resource = resourceRepository.findById(request.getResourceId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with id: " + request.getResourceId()));
+
+        if (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' is currently out of service");
+        }
+
+        // 3. Check capacity
+        if (resource.getCapacity() != null &&
+                request.getExpectedAttendees() > resource.getCapacity()) {
+            throw new BadRequestException(
+                    "Expected attendees (" + request.getExpectedAttendees()
+                    + ") exceeds resource capacity (" + resource.getCapacity() + ")");
+        }
+
+        // 4. Check for scheduling conflicts
+        List<Booking> conflicts = bookingRepository.findConflictingBookings(
+                resource.getId(),
+                request.getBookingDate(),
+                request.getStartTime(),
+                request.getEndTime(),
+                BLOCKING_STATUSES);
+
+        if (!conflicts.isEmpty()) {
+            throw new BookingConflictException(
+                    "Time slot conflicts with an existing booking for this resource");
+        }
+
+        // 5. Resolve user
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        // 6. Build and save
+        Booking booking = new Booking();
+        booking.setResource(resource);
+        booking.setUser(user);
+        booking.setBookingDate(request.getBookingDate());
+        booking.setStartTime(request.getStartTime());
+        booking.setEndTime(request.getEndTime());
+        booking.setPurpose(request.getPurpose());
+        booking.setExpectedAttendees(request.getExpectedAttendees());
+
+        Booking saved = bookingRepository.save(booking);
+        return toResponse(saved);
+    }
+
+    // ─── My Bookings ──────────────────────────────────────────
+
+    public List<BookingResponse> getMyBookings(String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        return bookingRepository.findByUserIdOrderByBookingDateDescStartTimeDesc(user.getId())
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ─── All Bookings (Admin) ─────────────────────────────────
+
+    public List<BookingResponse> getAllBookings(BookingStatus status, LocalDate date, Long resourceId) {
+        return bookingRepository.findAllWithFilters(status, date, resourceId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    // ─── Approve ──────────────────────────────────────────────
+
+    @Transactional
+    public BookingResponse approveBooking(Long bookingId, String adminEmail) {
+        Booking booking = findBookingOrThrow(bookingId);
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BadRequestException("Only PENDING bookings can be approved");
+        }
+
+        // Re-check for conflicts at approval time (another booking may have been approved since)
+        List<Booking> conflicts = bookingRepository.findConflictingBookings(
+                booking.getResource().getId(),
+                booking.getBookingDate(),
+                booking.getStartTime(),
+                booking.getEndTime(),
+                List.of(BookingStatus.APPROVED));
+
+        if (!conflicts.isEmpty()) {
+            throw new BookingConflictException(
+                    "Cannot approve — time slot now conflicts with an already approved booking");
+        }
+
+        booking.setStatus(BookingStatus.APPROVED);
+        booking.setApprovedBy(adminEmail);
+        booking.setApprovedAt(LocalDateTime.now());
+
+        return toResponse(bookingRepository.save(booking));
+    }
+
+    // ─── Reject ───────────────────────────────────────────────
+
+    @Transactional
+    public BookingResponse rejectBooking(Long bookingId, String reason, String adminEmail) {
+        Booking booking = findBookingOrThrow(bookingId);
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BadRequestException("Only PENDING bookings can be rejected");
+        }
+
+        booking.setStatus(BookingStatus.REJECTED);
+        booking.setRejectionReason(reason);
+
+        return toResponse(bookingRepository.save(booking));
+    }
+
+    // ─── Cancel ───────────────────────────────────────────────
+
+    @Transactional
+    public BookingResponse cancelBooking(Long bookingId, String userEmail) {
+        Booking booking = findBookingOrThrow(bookingId);
+
+        // Determine if requester is the owner or an admin
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        boolean isOwner = booking.getUser().getId().equals(requester.getId());
+        boolean isAdmin = requester.getRole().name().equals("ADMIN");
+
+        if (!isOwner && !isAdmin) {
+            throw new BadRequestException("You can only cancel your own bookings");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING &&
+                booking.getStatus() != BookingStatus.APPROVED) {
+            throw new BadRequestException("Only PENDING or APPROVED bookings can be cancelled");
+        }
+
+        booking.setStatus(BookingStatus.CANCELLED);
+        return toResponse(bookingRepository.save(booking));
+    }
+
+    // ─── Delete ───────────────────────────────────────────────
+
+    @Transactional
+    public void deleteBooking(Long bookingId) {
+        Booking booking = findBookingOrThrow(bookingId);
+        bookingRepository.delete(booking);
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────
+
+    private Booking findBookingOrThrow(Long id) {
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + id));
+    }
+
+    /** Maps entity to response DTO */
+    private BookingResponse toResponse(Booking booking) {
+        BookingResponse response = new BookingResponse();
+        response.setId(booking.getId());
+        response.setResourceId(booking.getResource().getId());
+        response.setResourceName(booking.getResource().getName());
+        response.setUserId(booking.getUser().getId());
+        response.setUserName(booking.getUser().getName());
+        response.setBookingDate(booking.getBookingDate());
+        response.setStartTime(booking.getStartTime());
+        response.setEndTime(booking.getEndTime());
+        response.setPurpose(booking.getPurpose());
+        response.setExpectedAttendees(booking.getExpectedAttendees());
+        response.setStatus(booking.getStatus().name());
+        response.setRejectionReason(booking.getRejectionReason());
+        response.setApprovedBy(booking.getApprovedBy());
+        response.setApprovedAt(booking.getApprovedAt());
+        response.setCreatedAt(booking.getCreatedAt());
+        response.setUpdatedAt(booking.getUpdatedAt());
+        return response;
+    }
+}
