@@ -24,6 +24,7 @@ import UserHomePage from './components/UserHomePage'
 import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
+import FacilitiesWorkspace from './components/resources/FacilitiesWorkspace'
 
 function App() {
  
@@ -54,6 +55,7 @@ function App() {
           <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
             <Route index element={<Navigate to="bookings" replace />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="resources" element={<FacilitiesWorkspace />} />
             <Route path="bookings" element={<AdminBookingsPage />} />
           </Route>
 
