@@ -55,7 +55,7 @@ export default function AdminLayout() {
       case '/dashboard/admin/bookings':
         return 'Booking Management'
       default:
-        return 'Dashboard'
+        return 'Admin Overview'
     }
   }
 
