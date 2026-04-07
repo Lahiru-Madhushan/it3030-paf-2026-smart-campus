@@ -69,8 +69,9 @@ const EMPTY_FORM = {
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export default function FacilitiesWorkspace() {
-  const { auth } = useAuth()
+  const { auth, currentUser } = useAuth()
   const token = auth?.token
+  const isAdmin = currentUser?.role === 'ADMIN'
   const [assets, setAssets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -112,6 +113,17 @@ export default function FacilitiesWorkspace() {
       setIssueDraft((current) => ({ ...current, assetId: String(assets[0].id) }))
     }
   }, [assets, issueDraft.assetId])
+
+  const pageItems = useMemo(
+    () => PAGE_ITEMS.filter((item) => isAdmin || item.id !== 'maintenance'),
+    [isAdmin],
+  )
+
+  useEffect(() => {
+    if (!pageItems.some((item) => item.id === page)) {
+      setPage('dashboard')
+    }
+  }, [page, pageItems])
 
   const filteredAssets = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -167,7 +179,7 @@ export default function FacilitiesWorkspace() {
   }
 
   async function saveAsset(url, method, payload, successMessage) {
-    if (!token) return null
+    if (!token || !isAdmin) return null
 
     const saved = normalizeAsset(
       await authRequest(url, token, {
@@ -206,7 +218,7 @@ export default function FacilitiesWorkspace() {
   }
 
   async function removeAsset(asset) {
-    if (!token || !window.confirm(`Delete ${asset.name}?`)) return
+    if (!token || !isAdmin || !window.confirm(`Delete ${asset.name}?`)) return
 
     try {
       await authRequest(`/api/resources/${asset.id}`, token, { method: 'DELETE' })
@@ -219,6 +231,10 @@ export default function FacilitiesWorkspace() {
   }
 
   async function patchAsset(asset, changes, successMessage) {
+    if (!isAdmin) {
+      setToast({ tone: 'danger', message: 'Only administrators can update assets.' })
+      return
+    }
     try {
       await saveAsset(`/api/resources/${asset.id}`, 'PUT', { ...assetToPayload(asset), ...changes }, successMessage)
     } catch (updateError) {
@@ -299,25 +315,27 @@ export default function FacilitiesWorkspace() {
     <div className="facilities-workspace">
       <div className="facilities-toolbar">
         <div>
-          <p className="facilities-eyebrow">Integrated campus operations</p>
-          <h2>Facilities and asset workspace</h2>
+          <p className="facilities-eyebrow">{isAdmin ? 'Integrated campus operations' : 'Smart campus catalogue'}</p>
+          <h2>{isAdmin ? 'Facilities and asset workspace' : 'Facilities and assets catalogue'}</h2>
         </div>
         <div className="facilities-toolbar__actions">
           <button type="button" className="facilities-button facilities-button--ghost" onClick={() => loadAssets()}>
             Refresh
           </button>
-          <button
-            type="button"
-            className="facilities-button"
-            onClick={() => setEditorState({ original: null, values: EMPTY_FORM })}
-          >
-            Add asset
-          </button>
+          {isAdmin ? (
+            <button
+              type="button"
+              className="facilities-button"
+              onClick={() => setEditorState({ original: null, values: EMPTY_FORM })}
+            >
+              Add asset
+            </button>
+          ) : null}
         </div>
       </div>
 
       <div className="facilities-nav">
-        {PAGE_ITEMS.map((item) => {
+        {pageItems.map((item) => {
           const badge =
             item.id === 'issues'
               ? openIssueCount || null
@@ -469,20 +487,24 @@ export default function FacilitiesWorkspace() {
                   >
                     Details
                   </button>
-                  <button
-                    type="button"
-                    className="facilities-button facilities-button--ghost"
-                    onClick={() => setEditorState({ original: asset, values: assetToForm(asset) })}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    className="facilities-button facilities-button--danger"
-                    onClick={() => removeAsset(asset)}
-                  >
-                    Delete
-                  </button>
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className="facilities-button facilities-button--ghost"
+                      onClick={() => setEditorState({ original: asset, values: assetToForm(asset) })}
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                  {isAdmin ? (
+                    <button
+                      type="button"
+                      className="facilities-button facilities-button--danger"
+                      onClick={() => removeAsset(asset)}
+                    >
+                      Delete
+                    </button>
+                  ) : null}
                 </div>
               </article>
             ))}
@@ -573,7 +595,7 @@ export default function FacilitiesWorkspace() {
         <section className="facilities-stack">
           <div className="facilities-card facilities-panel">
             <div className="facilities-panel__header">
-              <h3>Issue triage board</h3>
+              <h3>{isAdmin ? 'Issue triage board' : 'Reported issues'}</h3>
               <span>{issueRows.length} total</span>
             </div>
             <div className="facilities-stack">
@@ -598,7 +620,7 @@ export default function FacilitiesWorkspace() {
                       {issue.locationText || 'Location pending'} · {issue.date || 'No date'}
                     </span>
                   </div>
-                  {issue.status !== 'RESOLVED' ? (
+                  {isAdmin && issue.status !== 'RESOLVED' ? (
                     <button
                       type="button"
                       className="facilities-button facilities-button--ghost"
@@ -654,7 +676,7 @@ export default function FacilitiesWorkspace() {
         </section>
       ) : null}
 
-      {!loading && page === 'maintenance' ? (
+      {!loading && isAdmin && page === 'maintenance' ? (
         <section className="facilities-stack">
           <div className="facilities-stats">
             <StatCard label="Overdue" value={overdueAssets.length} tone="rose" />

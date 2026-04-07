@@ -25,6 +25,7 @@ import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
 import FacilitiesWorkspace from './components/resources/FacilitiesWorkspace'
+import UserFacilitiesPage from './pages/UserFacilitiesPage'
 
 function App() {
  
@@ -40,7 +41,6 @@ function App() {
         <Route path="/api/auth/oauth-success" element={<OAuthSuccessPage />} />
         <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
         <Route path="/profile" element={<UserProfile />} />
-        <Route path="/user/home" element={<UserHomePage />} />
         <Route path="/incidents" element={<TicketList />} />
         <Route path="/incidents/create" element={<TicketForm />} />
         <Route path="/incidents/:id" element={<TicketDetail />} />
@@ -51,6 +51,8 @@ function App() {
           <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
 
           <Route path="/dashboard/user" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
+          <Route path="/user/home" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
+          <Route path="/user/facilities" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserFacilitiesPage /></RoleRoute>} />
 
           <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
             <Route index element={<Navigate to="bookings" replace />} />
