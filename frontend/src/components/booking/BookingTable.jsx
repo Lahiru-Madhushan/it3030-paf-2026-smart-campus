@@ -7,6 +7,7 @@ function BookingTable({
   onApprove,
   onOpenReject,
   onCancel,
+  onOpenReschedule,
 }) {
   if (!bookings.length && !loading) {
     return (
@@ -34,6 +35,8 @@ function BookingTable({
         <tbody>
           {bookings.map((booking, index) => {
             const canCancel =
+              booking.status === 'APPROVED' || booking.status === 'PENDING'
+            const canReschedule =
               booking.status === 'APPROVED' || booking.status === 'PENDING'
 
             return (
@@ -85,6 +88,16 @@ function BookingTable({
                         onClick={() => onCancel(booking.id)}
                       >
                         ⊘ Cancel
+                      </button>
+                    ) : null}
+
+                    {!isAdmin && canReschedule ? (
+                      <button
+                        className="rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-white shadow-md hover:bg-yellow-600 transition-all"
+                        type="button"
+                        onClick={() => onOpenReschedule(booking)}
+                      >
+                        Reschedule
                       </button>
                     ) : null}
                   </div>

@@ -189,6 +189,73 @@ public class BookingService {
         return toResponse(bookingRepository.save(booking));
     }
 
+    // ─── Reschedule ───────────────────────────────────────────
+
+    @Transactional
+    public BookingResponse rescheduleBooking(Long bookingId, BookingRequest request, String userEmail) {
+        Booking booking = findBookingOrThrow(bookingId);
+
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        boolean isOwner = booking.getUser().getId().equals(requester.getId());
+        boolean isAdmin = requester.getRole().name().equals("ADMIN");
+
+        if (!isOwner && !isAdmin) {
+            throw new BadRequestException("You can only reschedule your own bookings");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING &&
+                booking.getStatus() != BookingStatus.APPROVED) {
+            throw new BadRequestException("Only PENDING or APPROVED bookings can be rescheduled");
+        }
+
+        if (!request.getStartTime().isBefore(request.getEndTime())) {
+            throw new BadRequestException("Start time must be before end time");
+        }
+
+        Resource resource = resourceRepository.findById(request.getResourceId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Resource not found with id: " + request.getResourceId()));
+
+        if (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' is currently out of service");
+        }
+
+        if (resource.getCapacity() != null &&
+                request.getExpectedAttendees() > resource.getCapacity()) {
+            throw new BadRequestException(
+                    "Expected attendees (" + request.getExpectedAttendees()
+                    + ") exceeds resource capacity (" + resource.getCapacity() + ")");
+        }
+
+        List<Booking> conflicts = bookingRepository.findConflictingBookingsExcludingId(
+                booking.getId(),
+                resource.getId(),
+                request.getBookingDate(),
+                request.getStartTime(),
+                request.getEndTime(),
+                BLOCKING_STATUSES);
+
+        if (!conflicts.isEmpty()) {
+            throw new BookingConflictException(
+                    "Reschedule conflict: selected time slot overlaps an existing booking");
+        }
+
+        booking.setResource(resource);
+        booking.setBookingDate(request.getBookingDate());
+        booking.setStartTime(request.getStartTime());
+        booking.setEndTime(request.getEndTime());
+        booking.setPurpose(request.getPurpose());
+        booking.setExpectedAttendees(request.getExpectedAttendees());
+        booking.setStatus(BookingStatus.PENDING);
+        booking.setApprovedBy(null);
+        booking.setApprovedAt(null);
+        booking.setRejectionReason(null);
+
+        return toResponse(bookingRepository.save(booking));
+    }
+
     // ─── Delete ───────────────────────────────────────────────
 
     @Transactional
