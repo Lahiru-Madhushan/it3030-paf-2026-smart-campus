@@ -7,6 +7,7 @@ function BookingTable({
   onApprove,
   onOpenReject,
   onCancel,
+  onDelete,
   onOpenReschedule,
 }) {
   if (!bookings.length && !loading) {
@@ -38,6 +39,7 @@ function BookingTable({
               booking.status === 'APPROVED' || booking.status === 'PENDING'
             const canReschedule =
               booking.status === 'APPROVED' || booking.status === 'PENDING'
+            const canDelete = booking.status === 'CANCELLED'
 
             return (
               <tr key={booking.id} className={`border-b border-gray-100 transition-colors ${index % 2 === 0 ? 'bg-white/50' : 'bg-gray-50/50'} hover:bg-yellow-50/50`}>
@@ -88,6 +90,16 @@ function BookingTable({
                         onClick={() => onCancel(booking.id)}
                       >
                         ⊘ Cancel
+                      </button>
+                    ) : null}
+
+                    {canDelete ? (
+                      <button
+                        className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-bold text-white shadow-md hover:bg-red-700 transition-all"
+                        type="button"
+                        onClick={() => onDelete?.(booking.id)}
+                      >
+                        Delete
                       </button>
                     ) : null}
 

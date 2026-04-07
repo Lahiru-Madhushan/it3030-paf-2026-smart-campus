@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -9,7 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext'
 
 export default function UserLayout() {
-  const { auth, logout } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -18,25 +17,10 @@ export default function UserLayout() {
     navigate('/')
   }
 
-  useEffect(() => {
-    if (!auth?.token) {
-      navigate('/')
-      return
-    }
-
-    const timer = setTimeout(() => {
-      logout()
-      alert('Session expired. Please login again.')
-      navigate('/')
-    }, 30 * 60 * 1000)
-
-    return () => clearTimeout(timer)
-  }, [auth, logout, navigate])
-
   const navItems = [
     { label: 'Home', path: '/user/home' },
     { label: 'Facilities', path: '/user/facilities' },
-    { label: 'Booking', path: '/bookings/form' },
+    { label: 'Booking', path: '/bookings/new' },
     { label: 'My Bookings', path: '/bookings/my-bookings' },
     { label: 'Ticket', path: '/user/ticket' },
   ]

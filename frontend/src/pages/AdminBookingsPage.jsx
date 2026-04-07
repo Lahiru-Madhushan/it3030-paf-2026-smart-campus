@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
+import { Toaster, toast } from 'react-hot-toast'
 import bookingsApi from '../api/bookingsApi'
 import BookingTable from '../components/booking/BookingTable'
 import FilterBar from '../components/booking/FilterBar'
 import RejectBookingModal from '../components/booking/RejectBookingModal'
-import ErrorAlert from '../components/common/ErrorAlert'
 import LoadingSpinner from '../components/common/LoadingSpinner'
-import SuccessAlert from '../components/common/SuccessAlert'
+import { getBookingErrorMessage } from '../utils/bookingErrorMessages'
 
 const INITIAL_FILTERS = {
   status: '',
@@ -13,42 +13,21 @@ const INITIAL_FILTERS = {
   resourceId: '',
 }
 
-function getFriendlyError(error, fallbackMessage) {
-  const responseData = error?.response?.data
-
-  if (typeof responseData === 'string' && responseData.trim()) {
-    return responseData
-  }
-
-  if (responseData?.message) {
-    return responseData.message
-  }
-
-  if (responseData?.error) {
-    return responseData.error
-  }
-
-  return fallbackMessage
-}
-
 function AdminBookingsPage() {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
   const [filters, setFilters] = useState(INITIAL_FILTERS)
   const [selectedBookingId, setSelectedBookingId] = useState(null)
 
   const fetchAllBookings = async (apiFilters = {}) => {
     setLoading(true)
-    setError('')
 
     try {
       const { data } = await bookingsApi.getAllBookings(apiFilters)
       setBookings(Array.isArray(data) ? data : [])
     } catch (apiError) {
-      setError(getFriendlyError(apiError, 'Failed to fetch bookings.'))
+      toast.error(getBookingErrorMessage(apiError, 'Unable to load bookings right now.'))
     } finally {
       setLoading(false)
     }
@@ -72,15 +51,15 @@ function AdminBookingsPage() {
 
   const handleApprove = async (bookingId) => {
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await bookingsApi.approveBooking(bookingId)
-      setSuccess('Booking approved successfully.')
-      applyFilters()
+      toast.success('Booking approved successfully.')
+      await fetchAllBookings(
+        Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '')),
+      )
     } catch (apiError) {
-      setError(getFriendlyError(apiError, 'Failed to approve booking.'))
+      toast.error(getBookingErrorMessage(apiError, 'Unable to approve this booking.'))
     } finally {
       setLoading(false)
     }
@@ -92,18 +71,17 @@ function AdminBookingsPage() {
     }
 
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await bookingsApi.rejectBooking(selectedBookingId, reason)
-      setSuccess('Booking rejected successfully.')
-      applyFilters()
+      toast.success('Booking rejected successfully.')
+      await fetchAllBookings(
+        Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '')),
+      )
       setSelectedBookingId(null)
       return { ok: true }
     } catch (apiError) {
-      const message = getFriendlyError(apiError, 'Failed to reject booking.')
-      setError(message)
+      const message = getBookingErrorMessage(apiError, 'Unable to reject this booking.')
       return { ok: false, message }
     } finally {
       setLoading(false)
@@ -112,15 +90,31 @@ function AdminBookingsPage() {
 
   const handleCancel = async (bookingId) => {
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await bookingsApi.cancelBooking(bookingId)
-      setSuccess('Booking cancelled successfully.')
-      applyFilters()
+      toast.success('Booking cancelled successfully.')
+      await fetchAllBookings(
+        Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '')),
+      )
     } catch (apiError) {
-      setError(getFriendlyError(apiError, 'Failed to cancel booking.'))
+      toast.error(getBookingErrorMessage(apiError, 'Unable to cancel this booking.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (bookingId) => {
+    setLoading(true)
+
+    try {
+      await bookingsApi.deleteBooking(bookingId)
+      toast.success('Cancelled booking deleted successfully.')
+      await fetchAllBookings(
+        Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '')),
+      )
+    } catch (apiError) {
+      toast.error(getBookingErrorMessage(apiError, 'Unable to delete this booking.'))
     } finally {
       setLoading(false)
     }
@@ -128,6 +122,7 @@ function AdminBookingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <Toaster position="top-right" />
       <section className="mx-auto max-w-7xl space-y-6">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-gray-900">Admin Booking Management</h1>
@@ -136,9 +131,6 @@ function AdminBookingsPage() {
             needed.
           </p>
         </div>
-
-        <ErrorAlert message={error} />
-        <SuccessAlert message={success} />
 
         <FilterBar
           filters={filters}
@@ -156,6 +148,7 @@ function AdminBookingsPage() {
           onApprove={handleApprove}
           onOpenReject={setSelectedBookingId}
           onCancel={handleCancel}
+          onDelete={handleDelete}
         />
 
         <RejectBookingModal
