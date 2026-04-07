@@ -4,16 +4,13 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
-import { BookingProvider } from './contexts/BookingContext.jsx'
 
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <BookingProvider>
-          <App />
-        </BookingProvider>
+        <App />
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
