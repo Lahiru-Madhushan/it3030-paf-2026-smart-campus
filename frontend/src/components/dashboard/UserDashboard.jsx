@@ -36,7 +36,8 @@ export default function UserLayout() {
   const navItems = [
     { label: 'Home', path: '/user/home' },
     { label: 'Facilities', path: '/user/facilities' },
-    { label: 'Booking', path: '/user/booking' },
+    { label: 'Booking', path: '/bookings/form' },
+    { label: 'My Bookings', path: '/bookings/my-bookings' },
     { label: 'Ticket', path: '/user/ticket' },
   ]
 

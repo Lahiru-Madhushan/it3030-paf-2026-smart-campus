@@ -1,22 +1,15 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { BookingProvider } from './contexts/BookingContext'
-import { UserProvider } from './contexts/UserContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import AdminBookingsPage from './pages/AdminBookingsPage'
-import BookingFormPage from './pages/BookingFormPage'
-import MyBookingsPage from './pages/MyBookingsPage'
-import NotFoundPage from './pages/NotFoundPage'
 import LandingPage from './components/LandingPage'
 import RegisterPage from './components/UserManagement/RegisterPage'
 import LoginPage from './components/UserManagement/LoginPage'
 import ForgotPasswordPage from './components/UserManagement/ForgotPasswordPage'
 import OAuthSuccessPage from './components/UserManagement/OAuthSuccessPage'
 import './App.css'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminDashboard from './components/dashboard/AdminDashboard'
 import TechnicianDasboard from './components/dashboard/TechnicianDashboard'
+import UserDashboard from './components/dashboard/UserDashboard'
+import ProtectedRoute from './components/ProtectedRoute'
 import RoleRoute from './components/RoleRoute'
-import UserBookingLayout from './layouts/UserBookingLayout'
-// import ResourceManagement from './components/dashboard/ResourceManagement'
 import { ROLES } from './utils/constants'
 import UserProfile from './components/UserManagement/UserProfile'
 import UserManagement from './components/UserManagement/UserManagement'
@@ -54,33 +47,32 @@ function App() {
           <Route path="/user/home" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
           <Route path="/user/facilities" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserFacilitiesPage /></RoleRoute>} />
 
-          <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
-            <Route index element={<Navigate to="bookings" replace />} />
+          <Route
+            path="admin"
+            element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}
+          >
+            <Route index element={<AdminOverviewContent />} />
             <Route path="users" element={<UserManagement />} />
             <Route path="resources" element={<FacilitiesWorkspace />} />
             <Route path="bookings" element={<AdminBookingsPage />} />
-          </Route>
-
-          <Route path="/dashboard/technician" element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]}><TechnicianDasboard /></RoleRoute>}>
             <Route path="incidents" element={<TicketList />} />
           </Route>
 
-          <Route element={<UserBookingLayout />}>
-            <Route path="/bookings/my" element={<MyBookingsPage />} />
-            <Route path="/bookings/form" element={<BookingFormPage />} />
-            <Route path="/bookings/new" element={<BookingFormPage />} />
+          <Route
+            path="technician"
+            element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]}><TechnicianDasboard /></RoleRoute>}
+          >
+            <Route index element={null} />
+            <Route path="incidents" element={<TicketList />} />
           </Route>
         </Route>
+      </Route>
 
-        {/* Redirects */}
-        <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
-        <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
+      <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
+      <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
 
-        {/* Fallback */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </BookingProvider>
-  </UserProvider>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
   )
 }
 

@@ -50,7 +50,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/oauth2/**",
-                                "/login/**"
+                                "/login/**",
+                                "/api/chat"
                         ).permitAll()
                         // Admin user management
                         .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")

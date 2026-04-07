@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import AdminChatBot  from '../AdditionalPages/Adminchatbot'
 
 export default function AdminLayout() {
   const { currentUser, logout, auth } = useAuth()
@@ -55,7 +56,7 @@ export default function AdminLayout() {
       case '/dashboard/admin/bookings':
         return 'Booking Management'
       default:
-        return 'Dashboard'
+        return 'Admin Overview'
     }
   }
 
@@ -219,6 +220,7 @@ export default function AdminLayout() {
           </p>
         </div>
       </main>
+       <AdminChatBot />
     </div>
   )
 }

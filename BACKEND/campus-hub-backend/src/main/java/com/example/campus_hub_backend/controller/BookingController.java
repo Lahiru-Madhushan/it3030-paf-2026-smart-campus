@@ -83,6 +83,15 @@ public class BookingController {
         return ResponseEntity.ok(bookingService.cancelBooking(id, authentication.getName()));
     }
 
+    /** PATCH /api/bookings/{id}/reschedule — Owner or admin updates booking slot/details */
+    @PatchMapping("/{id}/reschedule")
+    public ResponseEntity<BookingResponse> rescheduleBooking(
+            @PathVariable Long id,
+            @Valid @RequestBody BookingRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(bookingService.rescheduleBooking(id, request, authentication.getName()));
+    }
+
     /** DELETE /api/bookings/{id} — Admin hard-deletes a booking */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteBooking(@PathVariable Long id) {
