@@ -2,6 +2,28 @@ import { useState } from 'react'
 import { MessageCircle, Send, X } from 'lucide-react'
 import { API_BASE_URL } from '../../utils/constants'
 
+function normalizeBotReply(reply) {
+  if (!reply) return 'No response received.'
+  if (typeof reply !== 'string') return String(reply)
+
+  const trimmed = reply.trim()
+  if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (typeof parsed?.output === 'string' && parsed.output.trim()) {
+        return parsed.output
+      }
+      if (typeof parsed?.reply === 'string' && parsed.reply.trim()) {
+        return parsed.reply
+      }
+    } catch {
+      // Keep original string when reply is not valid JSON.
+    }
+  }
+
+  return trimmed
+}
+
 export default function AdminChatBot() {
   const [open, setOpen] = useState(false)
   const [message, setMessage] = useState('')
@@ -37,7 +59,7 @@ export default function AdminChatBot() {
 
       setMessages((prev) => [
         ...prev,
-        { sender: 'bot', text: data.reply || 'No response received.' },
+        { sender: 'bot', text: normalizeBotReply(data.reply) },
       ])
     } catch (error) {
       setMessages((prev) => [
