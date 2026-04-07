@@ -8,6 +8,8 @@ const bookingsApi = {
   rejectBooking: (id, reason) =>
     axiosClient.patch(`/api/bookings/${id}/reject`, { reason }),
   cancelBooking: (id) => axiosClient.patch(`/api/bookings/${id}/cancel`),
+  rescheduleBooking: (id, payload) =>
+    axiosClient.patch(`/api/bookings/${id}/reschedule`, payload),
 }
 
 export default bookingsApi
