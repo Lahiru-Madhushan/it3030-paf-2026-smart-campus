@@ -1,14 +1,53 @@
 import BookingForm from '../components/booking/BookingForm'
+import { useState } from 'react'
+import bookingsApi from '../api/bookingsApi'
 import ErrorAlert from '../components/common/ErrorAlert'
 import SuccessAlert from '../components/common/SuccessAlert'
-import { useBooking } from '../contexts/BookingContext'
+
+function getFriendlyError(error, fallbackMessage) {
+  const responseData = error?.response?.data
+
+  if (typeof responseData === 'string' && responseData.trim()) {
+    return responseData
+  }
+
+  if (responseData?.message) {
+    return responseData.message
+  }
+
+  if (responseData?.error) {
+    return responseData.error
+  }
+
+  return fallbackMessage
+}
 
 function BookingFormPage() {
-  const { createBooking, loading, error, success, clearMessages } = useBooking()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const handleSubmit = async (payload) => {
-    clearMessages()
-    return createBooking(payload)
+    setError('')
+    setSuccess('')
+    setLoading(true)
+
+    try {
+      const { data } = await bookingsApi.createBooking(payload)
+      setSuccess('Booking request submitted successfully.')
+      return { ok: true, data }
+    } catch (apiError) {
+      const isConflict = apiError?.response?.status === 409
+      const fallback = isConflict
+        ? 'Booking conflict detected. Please select another time slot.'
+        : 'Failed to create booking request.'
+
+      const message = getFriendlyError(apiError, fallback)
+      setError(message)
+      return { ok: false, message, status: apiError?.response?.status }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

@@ -1,28 +1,65 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import bookingsApi from '../api/bookingsApi'
 import BookingTable from '../components/booking/BookingTable'
 import ErrorAlert from '../components/common/ErrorAlert'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import SuccessAlert from '../components/common/SuccessAlert'
-import { useBooking } from '../contexts/BookingContext'
+
+function getFriendlyError(error, fallbackMessage) {
+  const responseData = error?.response?.data
+
+  if (typeof responseData === 'string' && responseData.trim()) {
+    return responseData
+  }
+
+  if (responseData?.message) {
+    return responseData.message
+  }
+
+  if (responseData?.error) {
+    return responseData.error
+  }
+
+  return fallbackMessage
+}
 
 function MyBookingsPage() {
-  const {
-    myBookings,
-    loading,
-    error,
-    success,
-    fetchMyBookings,
-    cancelBooking,
-  } = useBooking()
+  const [myBookings, setMyBookings] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const fetchMyBookings = async () => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data } = await bookingsApi.getMyBookings()
+      setMyBookings(Array.isArray(data) ? data : [])
+    } catch (apiError) {
+      setError(getFriendlyError(apiError, 'Failed to fetch your bookings.'))
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     fetchMyBookings()
-  }, [fetchMyBookings])
+  }, [])
 
   const handleCancel = async (bookingId) => {
-    const result = await cancelBooking(bookingId)
-    if (result.ok) {
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await bookingsApi.cancelBooking(bookingId)
+      setSuccess('Booking cancelled successfully.')
       fetchMyBookings()
+    } catch (apiError) {
+      setError(getFriendlyError(apiError, 'Failed to cancel booking.'))
+    } finally {
+      setLoading(false)
     }
   }
 

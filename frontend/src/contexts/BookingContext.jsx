@@ -156,11 +156,6 @@ export function BookingProvider({ children }) {
       setMyBookings,
     }),
     [
-      bookings,
-      myBookings,
-      loading,
-      error,
-      success,
       clearMessages,
       fetchMyBookings,
       fetchAllBookings,
