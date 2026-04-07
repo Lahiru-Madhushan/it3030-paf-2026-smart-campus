@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
+import bookingsApi from '../api/bookingsApi'
 import BookingTable from '../components/booking/BookingTable'
 import FilterBar from '../components/booking/FilterBar'
 import RejectBookingModal from '../components/booking/RejectBookingModal'
 import ErrorAlert from '../components/common/ErrorAlert'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import SuccessAlert from '../components/common/SuccessAlert'
-import { useBooking } from '../contexts/BookingContext'
 
 const INITIAL_FILTERS = {
   status: '',
@@ -13,24 +13,50 @@ const INITIAL_FILTERS = {
   resourceId: '',
 }
 
+function getFriendlyError(error, fallbackMessage) {
+  const responseData = error?.response?.data
+
+  if (typeof responseData === 'string' && responseData.trim()) {
+    return responseData
+  }
+
+  if (responseData?.message) {
+    return responseData.message
+  }
+
+  if (responseData?.error) {
+    return responseData.error
+  }
+
+  return fallbackMessage
+}
+
 function AdminBookingsPage() {
-  const {
-    bookings,
-    loading,
-    error,
-    success,
-    fetchAllBookings,
-    approveBooking,
-    rejectBooking,
-    cancelBooking,
-  } = useBooking()
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [filters, setFilters] = useState(INITIAL_FILTERS)
   const [selectedBookingId, setSelectedBookingId] = useState(null)
 
+  const fetchAllBookings = async (apiFilters = {}) => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const { data } = await bookingsApi.getAllBookings(apiFilters)
+      setBookings(Array.isArray(data) ? data : [])
+    } catch (apiError) {
+      setError(getFriendlyError(apiError, 'Failed to fetch bookings.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchAllBookings({})
-  }, [fetchAllBookings])
+  }, [])
 
   const applyFilters = () => {
     const apiFilters = Object.fromEntries(
@@ -45,9 +71,18 @@ function AdminBookingsPage() {
   }
 
   const handleApprove = async (bookingId) => {
-    const result = await approveBooking(bookingId)
-    if (result.ok) {
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await bookingsApi.approveBooking(bookingId)
+      setSuccess('Booking approved successfully.')
       applyFilters()
+    } catch (apiError) {
+      setError(getFriendlyError(apiError, 'Failed to approve booking.'))
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -56,19 +91,38 @@ function AdminBookingsPage() {
       return { ok: false }
     }
 
-    const result = await rejectBooking(selectedBookingId, reason)
-    if (result.ok) {
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await bookingsApi.rejectBooking(selectedBookingId, reason)
+      setSuccess('Booking rejected successfully.')
       applyFilters()
       setSelectedBookingId(null)
+      return { ok: true }
+    } catch (apiError) {
+      const message = getFriendlyError(apiError, 'Failed to reject booking.')
+      setError(message)
+      return { ok: false, message }
+    } finally {
+      setLoading(false)
     }
-
-    return result
   }
 
   const handleCancel = async (bookingId) => {
-    const result = await cancelBooking(bookingId)
-    if (result.ok) {
+    setLoading(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      await bookingsApi.cancelBooking(bookingId)
+      setSuccess('Booking cancelled successfully.')
       applyFilters()
+    } catch (apiError) {
+      setError(getFriendlyError(apiError, 'Failed to cancel booking.'))
+    } finally {
+      setLoading(false)
     }
   }
 
