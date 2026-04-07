@@ -19,12 +19,13 @@ import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
 import AdminOverviewContent from './components/dashboard/AdminOverviewContent'
 import AdminBookingsPage from './pages/AdminBookingsPage'
+import BookingFormPage from './pages/BookingFormPage'
+import MyBookingsPage from './pages/MyBookingsPage'
 
 function App() {
- 
- return (
-  <Routes>  
-          <Route path="/" element={<LandingPage />} />  
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -33,18 +34,23 @@ function App() {
       <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
       <Route path="/profile" element={<UserProfile />} />
       <Route path="/user/home" element={<UserHomePage />} />
+      <Route path="/bookings/form" element={<BookingFormPage />} />
+      <Route path="/bookings/my-bookings" element={<MyBookingsPage />} />
       <Route path="/incidents" element={<TicketList />} />
       <Route path="/incidents/create" element={<TicketForm />} />
       <Route path="/incidents/:id" element={<TicketDetail />} />
       <Route path="/technician/incidents" element={<TicketList />} />
       <Route path="/technician/incidents/:id" element={<TicketDetail />} />
 
-    <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" >
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard">
           <Route index element={<Navigate to="user" replace />} />
-          
+          <Route path="user" element={<UserDashboard />} />
 
-          <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
+          <Route
+            path="admin"
+            element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}
+          >
             <Route index element={<AdminOverviewContent />} />
             <Route path="users" element={<UserManagement />} />
             <Route
@@ -56,32 +62,24 @@ function App() {
               }
             />
             <Route path="bookings" element={<AdminBookingsPage />} />
+            <Route path="incidents" element={<TicketList />} />
           </Route>
 
-          <Route element={<RoleRoute allowedRoles={[ROLES.ADMIN]} />}>
-            <Route path="admin" element={<AdminDashboard />}>
-              
-              <Route path="users" element={<UserManagement />} />
-              <Route path="incidents" element={<TicketList />} />
-              {/* <Route path="resources" element={<ResourceManagement />} /> */}
-
-              {/* <Route path="bookings" element={<BookingManagement />} /> */}
-
-            </Route>
+          <Route
+            path="technician"
+            element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]}><TechnicianDasboard /></RoleRoute>}
+          >
+            <Route index element={null} />
+            <Route path="incidents" element={<TicketList />} />
           </Route>
-
-          <Route element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]} />}>
-            <Route path="technician" element={<TechnicianDasboard />} />
-              <Route path="incidents" element={<TicketList />} />
-          </Route>
-       </Route>
         </Route>
+      </Route>
+
       <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
       <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
-     {/* <Route path="/admin/resources" element={<Navigate to="/dashboard/admin/resources" replace />} />
-      <Route path="/admin/bookings" element={<Navigate to="/dashboard/admin/bookings" replace />} />   */}
+
       <Route path="*" element={<Navigate to="/login" replace />} />
-  </Routes>
+    </Routes>
   )
 }
 
