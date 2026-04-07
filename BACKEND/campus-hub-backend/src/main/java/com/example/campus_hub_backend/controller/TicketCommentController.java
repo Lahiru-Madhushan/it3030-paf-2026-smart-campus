@@ -1,7 +1,7 @@
 package com.example.campus_hub_backend.controller;
 
 import com.example.campus_hub_backend.dto.CommentRequestDTO;
-import com.example.campus_hub_backend.entity.TicketComment;
+import com.example.campus_hub_backend.dto.CommentResponseDTO;
 import com.example.campus_hub_backend.service.TicketCommentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,36 +18,32 @@ public class TicketCommentController {
 
     private final TicketCommentService commentService;
 
-    // POST /api/tickets/{id}/comments — Add a comment
     @PostMapping("/{id}/comments")
-    public ResponseEntity<TicketComment> addComment(
+    public ResponseEntity<CommentResponseDTO> addComment(
             @PathVariable Long id,
             @Valid @RequestBody CommentRequestDTO request,
             Principal principal) {
         String email = principal.getName();
-        TicketComment comment = commentService.addComment(id, request, email);
+        CommentResponseDTO comment = commentService.addComment(id, request, email);
         return ResponseEntity.status(HttpStatus.CREATED).body(comment);
     }
 
-    // GET /api/tickets/{id}/comments — Get all comments
     @GetMapping("/{id}/comments")
-    public ResponseEntity<List<TicketComment>> getComments(@PathVariable Long id) {
+    public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable Long id) {
         return ResponseEntity.ok(commentService.getCommentsByTicket(id));
     }
 
-    // PUT /api/tickets/{id}/comments/{commentId} — Edit a comment
     @PutMapping("/{id}/comments/{commentId}")
-    public ResponseEntity<TicketComment> editComment(
+    public ResponseEntity<CommentResponseDTO> editComment(
             @PathVariable Long id,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentRequestDTO request,
             Principal principal) {
         String email = principal.getName();
-        TicketComment updated = commentService.editComment(commentId, request, email);
+        CommentResponseDTO updated = commentService.editComment(commentId, request, email);
         return ResponseEntity.ok(updated);
     }
 
-    // DELETE /api/tickets/{id}/comments/{commentId} — Delete a comment
     @DeleteMapping("/{id}/comments/{commentId}")
     public ResponseEntity<Void> deleteComment(
             @PathVariable Long id,

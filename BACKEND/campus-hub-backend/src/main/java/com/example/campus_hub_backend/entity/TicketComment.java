@@ -1,5 +1,6 @@
 package com.example.campus_hub_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,17 +21,19 @@ public class TicketComment {
     @Column(nullable = false, length = 1000)
     private String content;
 
+    @Column(nullable = false)
+    private boolean resolutionNote = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
-    // Which ticket this comment belongs to
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)
     private IncidentTicket ticket;
 
-    // Who wrote this comment
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User createdBy;

@@ -8,4 +8,6 @@ public class CommentRequestDTO {
 
     @NotBlank(message = "Comment content is required")
     private String content;
+
+    private boolean resolutionNote = false;
 }
