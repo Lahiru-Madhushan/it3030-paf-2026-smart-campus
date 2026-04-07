@@ -18,6 +18,7 @@ import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
 import AdminOverviewContent from './components/dashboard/AdminOverviewContent'
+import AdminBookingsPage from './pages/AdminBookingsPage'
 
 function App() {
  
