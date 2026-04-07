@@ -17,6 +17,7 @@ import UserHomePage from './components/UserHomePage'
 import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
+import AdminOverviewContent from './components/dashboard/AdminOverviewContent'
 
 function App() {
  
@@ -42,8 +43,18 @@ function App() {
           <Route index element={<Navigate to="user" replace />} />
           
 
-          <Route element={<RoleRoute allowedRoles={[ROLES.USER]} />}>
-            <Route path="user" element={<UserHomePage />} />
+          <Route path="/dashboard/admin" element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}>
+            <Route index element={<AdminOverviewContent />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route
+              path="resources"
+              element={
+                <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
+                  Resource management is under construction.
+                </div>
+              }
+            />
+            <Route path="bookings" element={<AdminBookingsPage />} />
           </Route>
 
           <Route element={<RoleRoute allowedRoles={[ROLES.ADMIN]} />}>
