@@ -33,7 +33,7 @@ export default function Footer({ currentUser, handleLogout }) {
             </p>
             <p
               className="cursor-pointer hover:text-gray-900"
-              onClick={() => navigate('/user/booking')}
+              onClick={() => navigate('/bookings/new')}
             >
               Booking
             </p>

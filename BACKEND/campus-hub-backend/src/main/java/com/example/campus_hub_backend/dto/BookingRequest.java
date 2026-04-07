@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 public class BookingRequest {
 
     @NotNull(message = "Resource ID is required")
+    @Min(value = 1, message = "Resource ID must be at least 1")
     private Long resourceId;
 
     @NotNull(message = "Booking date is required")

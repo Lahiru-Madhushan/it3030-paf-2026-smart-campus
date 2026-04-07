@@ -6,6 +6,7 @@ import com.example.campus_hub_backend.entity.Booking;
 import com.example.campus_hub_backend.entity.Resource;
 import com.example.campus_hub_backend.entity.User;
 import com.example.campus_hub_backend.enumtype.BookingStatus;
+import com.example.campus_hub_backend.enumtype.ResourceCondition;
 import com.example.campus_hub_backend.enumtype.ResourceStatus;
 import com.example.campus_hub_backend.exception.BadRequestException;
 import com.example.campus_hub_backend.exception.BookingConflictException;
@@ -18,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @Service
@@ -43,29 +45,20 @@ public class BookingService {
 
     @Transactional
     public BookingResponse createBooking(BookingRequest request, String userEmail) {
-        // 1. Validate time range
-        if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new BadRequestException("Start time must be before end time");
-        }
+        validateRequestedTimeRange(request.getStartTime(), request.getEndTime());
+        validateTodayTimeNotInPast(request.getBookingDate(), request.getStartTime());
 
-        // 2. Validate resource exists and is available
+        // 1. Validate resource exists and is bookable
         Resource resource = resourceRepository.findById(request.getResourceId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Resource not found with id: " + request.getResourceId()));
+        validateResourceBookableForSlot(
+            resource,
+            request.getStartTime(),
+            request.getEndTime(),
+            request.getExpectedAttendees());
 
-        if (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE) {
-            throw new BadRequestException("Resource '" + resource.getName() + "' is currently out of service");
-        }
-
-        // 3. Check capacity
-        if (resource.getCapacity() != null &&
-                request.getExpectedAttendees() > resource.getCapacity()) {
-            throw new BadRequestException(
-                    "Expected attendees (" + request.getExpectedAttendees()
-                    + ") exceeds resource capacity (" + resource.getCapacity() + ")");
-        }
-
-        // 4. Check for scheduling conflicts
+        // 2. Check for scheduling conflicts
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
                 resource.getId(),
                 request.getBookingDate(),
@@ -78,11 +71,11 @@ public class BookingService {
                     "Time slot conflicts with an existing booking for this resource");
         }
 
-        // 5. Resolve user
+        // 3. Resolve user
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
 
-        // 6. Build and save
+        // 4. Build and save
         Booking booking = new Booking();
         booking.setResource(resource);
         booking.setUser(user);
@@ -126,6 +119,13 @@ public class BookingService {
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new BadRequestException("Only PENDING bookings can be approved");
         }
+
+        validateTodayTimeNotInPast(booking.getBookingDate(), booking.getStartTime());
+        validateResourceBookableForSlot(
+            booking.getResource(),
+            booking.getStartTime(),
+            booking.getEndTime(),
+            booking.getExpectedAttendees());
 
         // Re-check for conflicts at approval time (another booking may have been approved since)
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
@@ -210,24 +210,17 @@ public class BookingService {
             throw new BadRequestException("Only PENDING or APPROVED bookings can be rescheduled");
         }
 
-        if (!request.getStartTime().isBefore(request.getEndTime())) {
-            throw new BadRequestException("Start time must be before end time");
-        }
+        validateRequestedTimeRange(request.getStartTime(), request.getEndTime());
+        validateTodayTimeNotInPast(request.getBookingDate(), request.getStartTime());
 
         Resource resource = resourceRepository.findById(request.getResourceId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Resource not found with id: " + request.getResourceId()));
-
-        if (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE) {
-            throw new BadRequestException("Resource '" + resource.getName() + "' is currently out of service");
-        }
-
-        if (resource.getCapacity() != null &&
-                request.getExpectedAttendees() > resource.getCapacity()) {
-            throw new BadRequestException(
-                    "Expected attendees (" + request.getExpectedAttendees()
-                    + ") exceeds resource capacity (" + resource.getCapacity() + ")");
-        }
+        validateResourceBookableForSlot(
+            resource,
+            request.getStartTime(),
+            request.getEndTime(),
+            request.getExpectedAttendees());
 
         List<Booking> conflicts = bookingRepository.findConflictingBookingsExcludingId(
                 booking.getId(),
@@ -259,8 +252,23 @@ public class BookingService {
     // ─── Delete ───────────────────────────────────────────────
 
     @Transactional
-    public void deleteBooking(Long bookingId) {
+    public void deleteBooking(Long bookingId, String userEmail) {
         Booking booking = findBookingOrThrow(bookingId);
+
+        User requester = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+
+        boolean isOwner = booking.getUser().getId().equals(requester.getId());
+        boolean isAdmin = requester.getRole().name().equals("ADMIN");
+
+        if (!isOwner && !isAdmin) {
+            throw new BadRequestException("Only the booking owner or an admin can delete this booking");
+        }
+
+        if (booking.getStatus() != BookingStatus.CANCELLED) {
+            throw new BadRequestException("Only CANCELLED bookings can be deleted");
+        }
+
         bookingRepository.delete(booking);
     }
 
@@ -291,5 +299,70 @@ public class BookingService {
         response.setCreatedAt(booking.getCreatedAt());
         response.setUpdatedAt(booking.getUpdatedAt());
         return response;
+    }
+
+    private void validateRequestedTimeRange(LocalTime startTime, LocalTime endTime) {
+        if (!startTime.isBefore(endTime)) {
+            throw new BadRequestException("Start time must be before end time");
+        }
+    }
+
+    private void validateTodayTimeNotInPast(LocalDate bookingDate, LocalTime startTime) {
+        if (!LocalDate.now().equals(bookingDate)) {
+            return;
+        }
+
+        LocalTime now = LocalTime.now();
+        if (!startTime.isAfter(now)) {
+            throw new BadRequestException("For today, start time must be in the future");
+        }
+    }
+
+    private void validateResourceBookableForSlot(
+            Resource resource,
+            LocalTime startTime,
+            LocalTime endTime,
+            Integer expectedAttendees) {
+        if (Boolean.FALSE.equals(resource.getIsActive())) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' is inactive");
+        }
+
+        if (resource.getStatus() == ResourceStatus.OUT_OF_SERVICE
+                || resource.getStatus() == ResourceStatus.UNDER_MAINTENANCE
+                || resource.getStatus() == ResourceStatus.INACTIVE) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' is not currently bookable");
+        }
+
+        if (Boolean.TRUE.equals(resource.getBorrowed())) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' is currently borrowed");
+        }
+
+        if (resource.getCondition() == ResourceCondition.REPAIR_NEEDED) {
+            throw new BadRequestException("Resource '" + resource.getName() + "' needs repair and cannot be booked");
+        }
+
+        if (resource.getCapacity() != null && expectedAttendees > resource.getCapacity()) {
+            throw new BadRequestException(
+                    "Expected attendees (" + expectedAttendees
+                            + ") exceeds resource capacity (" + resource.getCapacity() + ")");
+        }
+
+        LocalTime availableFrom = resource.getAvailableFrom();
+        LocalTime availableTo = resource.getAvailableTo();
+
+        if (availableFrom != null && availableTo != null && !availableFrom.isBefore(availableTo)) {
+            throw new BadRequestException(
+                    "Resource '" + resource.getName() + "' has invalid availability window configured");
+        }
+
+        if (availableFrom != null && startTime.isBefore(availableFrom)) {
+            throw new BadRequestException(
+                    "Booking starts before resource availability window (from " + availableFrom + ")");
+        }
+
+        if (availableTo != null && endTime.isAfter(availableTo)) {
+            throw new BadRequestException(
+                    "Booking ends after resource availability window (until " + availableTo + ")");
+        }
     }
 }

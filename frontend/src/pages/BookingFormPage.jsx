@@ -1,50 +1,35 @@
 import BookingForm from '../components/booking/BookingForm'
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { Toaster, toast } from 'react-hot-toast'
 import bookingsApi from '../api/bookingsApi'
-import ErrorAlert from '../components/common/ErrorAlert'
-import SuccessAlert from '../components/common/SuccessAlert'
 import Header from '../components/dashboard/UserDashboard'
-
-function getFriendlyError(error, fallbackMessage) {
-  const responseData = error?.response?.data
-
-  if (typeof responseData === 'string' && responseData.trim()) {
-    return responseData
-  }
-
-  if (responseData?.message) {
-    return responseData.message
-  }
-
-  if (responseData?.error) {
-    return responseData.error
-  }
-
-  return fallbackMessage
-}
+import { getBookingErrorMessage } from '../utils/bookingErrorMessages'
 
 function BookingFormPage() {
+  const [searchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const resourceIdParam = searchParams.get('resourceId')
+  const resourceCodeParam = searchParams.get('resourceCode')
+
+  const parsedResourceId = Number(resourceIdParam)
+  const prefilledResourceId = Number.isFinite(parsedResourceId) && parsedResourceId > 0
+    ? parsedResourceId
+    : null
 
   const handleSubmit = async (payload) => {
-    setError('')
-    setSuccess('')
     setLoading(true)
 
     try {
       const { data } = await bookingsApi.createBooking(payload)
-      setSuccess('Booking request submitted successfully.')
+      toast.success('Booking request submitted successfully.')
       return { ok: true, data }
     } catch (apiError) {
-      const isConflict = apiError?.response?.status === 409
-      const fallback = isConflict
-        ? 'Booking conflict detected. Please select another time slot.'
-        : 'Failed to create booking request.'
-
-      const message = getFriendlyError(apiError, fallback)
-      setError(message)
+      const message = getBookingErrorMessage(
+        apiError,
+        'Could not submit booking right now. Please try again.',
+      )
+      toast.error(message)
       return { ok: false, message, status: apiError?.response?.status }
     } finally {
       setLoading(false)
@@ -54,6 +39,7 @@ function BookingFormPage() {
   return (
     <>
       <Header />
+      <Toaster position="top-right" />
       <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
         <section className="mx-auto max-w-2xl space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -74,10 +60,18 @@ function BookingFormPage() {
             </button> */}
           </div>
 
-          <ErrorAlert message={error} />
-          <SuccessAlert message={success} />
+          {prefilledResourceId ? (
+            <div className="rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+              Booking for resource ID {prefilledResourceId}
+              {resourceCodeParam ? ` (${resourceCodeParam})` : ''}.
+            </div>
+          ) : null}
 
-          <BookingForm onSubmit={handleSubmit} loading={loading} />
+          <BookingForm
+            onSubmit={handleSubmit}
+            loading={loading}
+            initialResourceId={prefilledResourceId}
+          />
         </section>
       </div>
     </>

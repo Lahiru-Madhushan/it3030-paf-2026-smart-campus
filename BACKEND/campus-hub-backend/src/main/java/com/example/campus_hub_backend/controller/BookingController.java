@@ -94,8 +94,10 @@ public class BookingController {
 
     /** DELETE /api/bookings/{id} — Admin hard-deletes a booking */
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> deleteBooking(@PathVariable Long id) {
-        bookingService.deleteBooking(id);
+    public ResponseEntity<ApiResponse> deleteBooking(
+            @PathVariable Long id,
+            Authentication authentication) {
+        bookingService.deleteBooking(id, authentication.getName());
         return ResponseEntity.ok(new ApiResponse(true, "Booking deleted successfully"));
     }
 }

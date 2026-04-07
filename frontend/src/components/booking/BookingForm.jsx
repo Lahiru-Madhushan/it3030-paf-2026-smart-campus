@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 const DEFAULT_FORM = {
   resourceId: '',
@@ -9,11 +9,18 @@ const DEFAULT_FORM = {
   expectedAttendees: '',
 }
 
-function BookingForm({ onSubmit, loading }) {
+function BookingForm({ onSubmit, loading, initialResourceId = null }) {
   const [formData, setFormData] = useState(DEFAULT_FORM)
   const [formError, setFormError] = useState('')
 
   const minDate = useMemo(() => new Date().toISOString().split('T')[0], [])
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      resourceId: initialResourceId ? String(initialResourceId) : prev.resourceId,
+    }))
+  }, [initialResourceId])
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -36,8 +43,24 @@ function BookingForm({ onSubmit, loading }) {
       return 'Start time must be earlier than end time.'
     }
 
+    if (!Number.isInteger(Number(formData.resourceId)) || Number(formData.resourceId) <= 0) {
+      return 'Resource ID must be a positive number.'
+    }
+
     if (Number(formData.expectedAttendees) <= 0) {
       return 'Expected attendees must be greater than zero.'
+    }
+
+    const today = new Date().toISOString().split('T')[0]
+    if (formData.bookingDate === today) {
+      const now = new Date()
+      const nowMinutes = now.getHours() * 60 + now.getMinutes()
+      const [startHour, startMinute] = formData.startTime.split(':').map(Number)
+      const startMinutes = startHour * 60 + startMinute
+
+      if (startMinutes <= nowMinutes) {
+        return 'For today, start time must be in the future.'
+      }
     }
 
     return ''
@@ -66,7 +89,10 @@ function BookingForm({ onSubmit, loading }) {
     const result = await onSubmit(payload)
 
     if (result?.ok) {
-      setFormData(DEFAULT_FORM)
+      setFormData({
+        ...DEFAULT_FORM,
+        resourceId: initialResourceId ? String(initialResourceId) : '',
+      })
     }
   }
 

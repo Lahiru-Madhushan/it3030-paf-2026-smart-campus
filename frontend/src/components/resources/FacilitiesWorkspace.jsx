@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { authRequest } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import './facilitiesWorkspace.css'
@@ -70,6 +71,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export default function FacilitiesWorkspace() {
   const { auth, currentUser } = useAuth()
+  const navigate = useNavigate()
   const token = auth?.token
   const isAdmin = currentUser?.role === 'ADMIN'
   const [assets, setAssets] = useState([])
@@ -482,6 +484,19 @@ export default function FacilitiesWorkspace() {
                 <div className="facilities-actions">
                   <button
                     type="button"
+                    className="facilities-button"
+                    onClick={() =>
+                      navigate(
+                        `/bookings/new?resourceId=${asset.id}&resourceCode=${encodeURIComponent(
+                          asset.resourceCode || '',
+                        )}`,
+                      )
+                    }
+                  >
+                    Book
+                  </button>
+                  <button
+                    type="button"
                     className="facilities-button facilities-button--ghost"
                     onClick={() => setSelectedAsset(asset)}
                   >
@@ -794,6 +809,21 @@ export default function FacilitiesWorkspace() {
               <Fact label="Rating" value={selectedAsset.rating.toFixed(1)} />
               <Fact label="Total bookings" value={selectedAsset.totalBookings} />
               <Fact label="Today's bookings" value={selectedAsset.bookingsToday} />
+            </div>
+            <div className="facilities-actions">
+              <button
+                type="button"
+                className="facilities-button"
+                onClick={() =>
+                  navigate(
+                    `/bookings/new?resourceId=${selectedAsset.id}&resourceCode=${encodeURIComponent(
+                      selectedAsset.resourceCode || '',
+                    )}`,
+                  )
+                }
+              >
+                Book this resource
+              </button>
             </div>
           </div>
         </Modal>

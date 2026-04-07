@@ -39,8 +39,10 @@ export function AuthProvider({ children }) {
       loading,
       isAuthenticated: Boolean(auth?.token),
       login: async (credentials) => {
-        const response = await authService.login(credentials)
+        setLoading(true)
+
         try {
+          const response = await authService.login(credentials)
           setStoredAuth(response)
           setAuth(response)
           const user = await authService.getCurrentUser(response.token)
@@ -51,9 +53,13 @@ export function AuthProvider({ children }) {
           setAuth(null)
           setCurrentUser(null)
           throw error
+        } finally {
+          setLoading(false)
         }
       },
       finishOAuthLogin: async (payload) => {
+        setLoading(true)
+
         try {
           setStoredAuth(payload)
           setAuth(payload)
@@ -64,6 +70,8 @@ export function AuthProvider({ children }) {
           setAuth(null)
           setCurrentUser(null)
           throw error
+        } finally {
+          setLoading(false)
         }
       },
       logout: () => {

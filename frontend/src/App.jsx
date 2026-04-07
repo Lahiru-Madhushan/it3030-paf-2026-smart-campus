@@ -19,14 +19,17 @@ import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
 import FacilitiesWorkspace from './components/resources/FacilitiesWorkspace'
 import UserFacilitiesPage from './pages/UserFacilitiesPage'
+import { UserProvider } from './contexts/UserContext'
+import AdminOverviewContent from './components/dashboard/AdminOverviewContent'
+import AdminBookingsPage from './pages/AdminBookingsPage'
+import BookingFormPage from './pages/BookingFormPage'
+import MyBookingsPage from './pages/MyBookingsPage'
 
 function App() {
- 
- return (
-  <UserProvider>
-    <BookingProvider>
-      <Routes>  
-        <Route path="/" element={<LandingPage />} />  
+  return (
+    <UserProvider>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -42,13 +45,14 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
-
           <Route path="/dashboard/user" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
           <Route path="/user/home" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
           <Route path="/user/facilities" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserFacilitiesPage /></RoleRoute>} />
+          <Route path="/bookings/new" element={<RoleRoute allowedRoles={[ROLES.USER]}><BookingFormPage /></RoleRoute>} />
+          <Route path="/bookings/my-bookings" element={<RoleRoute allowedRoles={[ROLES.USER]}><MyBookingsPage /></RoleRoute>} />
 
           <Route
-            path="admin"
+            path="/dashboard/admin"
             element={<RoleRoute allowedRoles={[ROLES.ADMIN]}><AdminDashboard /></RoleRoute>}
           >
             <Route index element={<AdminOverviewContent />} />
@@ -59,20 +63,20 @@ function App() {
           </Route>
 
           <Route
-            path="technician"
+            path="/dashboard/technician"
             element={<RoleRoute allowedRoles={[ROLES.TECHNICIAN]}><TechnicianDasboard /></RoleRoute>}
           >
             <Route index element={null} />
             <Route path="incidents" element={<TicketList />} />
           </Route>
         </Route>
-      </Route>
 
-      <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
-      <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
+        <Route path="/admin" element={<Navigate to="/dashboard/admin" replace />} />
+        <Route path="/admin/users" element={<Navigate to="/dashboard/admin/users" replace />} />
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </UserProvider>
   )
 }
 

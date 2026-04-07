@@ -1,46 +1,25 @@
 import { useEffect, useState } from 'react'
+import { Toaster, toast } from 'react-hot-toast'
 import bookingsApi from '../api/bookingsApi'
 import BookingTable from '../components/booking/BookingTable'
 import RescheduleBookingModal from '../components/booking/RescheduleBookingModal'
-import ErrorAlert from '../components/common/ErrorAlert'
 import LoadingSpinner from '../components/common/LoadingSpinner'
-import SuccessAlert from '../components/common/SuccessAlert'
 import Header from '../components/dashboard/UserDashboard'
-
-function getFriendlyError(error, fallbackMessage) {
-  const responseData = error?.response?.data
-
-  if (typeof responseData === 'string' && responseData.trim()) {
-    return responseData
-  }
-
-  if (responseData?.message) {
-    return responseData.message
-  }
-
-  if (responseData?.error) {
-    return responseData.error
-  }
-
-  return fallbackMessage
-}
+import { getBookingErrorMessage } from '../utils/bookingErrorMessages'
 
 function MyBookingsPage() {
   const [myBookings, setMyBookings] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [selectedBooking, setSelectedBooking] = useState(null)
 
   const fetchMyBookings = async () => {
     setLoading(true)
-    setError('')
 
     try {
       const { data } = await bookingsApi.getMyBookings()
       setMyBookings(Array.isArray(data) ? data : [])
     } catch (apiError) {
-      setError(getFriendlyError(apiError, 'Failed to fetch your bookings.'))
+      toast.error(getBookingErrorMessage(apiError, 'Unable to load your bookings right now.'))
     } finally {
       setLoading(false)
     }
@@ -52,15 +31,27 @@ function MyBookingsPage() {
 
   const handleCancel = async (bookingId) => {
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await bookingsApi.cancelBooking(bookingId)
-      setSuccess('Booking cancelled successfully.')
-      fetchMyBookings()
+      toast.success('Booking cancelled successfully.')
+      await fetchMyBookings()
     } catch (apiError) {
-      setError(getFriendlyError(apiError, 'Failed to cancel booking.'))
+      toast.error(getBookingErrorMessage(apiError, 'Unable to cancel this booking.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (bookingId) => {
+    setLoading(true)
+
+    try {
+      await bookingsApi.deleteBooking(bookingId)
+      toast.success('Cancelled booking deleted successfully.')
+      await fetchMyBookings()
+    } catch (apiError) {
+      toast.error(getBookingErrorMessage(apiError, 'Unable to delete this booking.'))
     } finally {
       setLoading(false)
     }
@@ -72,22 +63,15 @@ function MyBookingsPage() {
     }
 
     setLoading(true)
-    setError('')
-    setSuccess('')
 
     try {
       await bookingsApi.rescheduleBooking(selectedBooking.id, payload)
-      setSuccess('Booking rescheduled successfully and moved to pending approval.')
+      toast.success('Booking rescheduled and moved to pending approval.')
       setSelectedBooking(null)
-      fetchMyBookings()
+      await fetchMyBookings()
       return { ok: true }
     } catch (apiError) {
-      const isConflict = apiError?.response?.status === 409
-      const fallback = isConflict
-        ? 'Selected time slot conflicts with another booking. Please choose another slot.'
-        : 'Failed to reschedule booking.'
-      const message = getFriendlyError(apiError, fallback)
-      setError(message)
+      const message = getBookingErrorMessage(apiError, 'Unable to reschedule this booking.')
       return { ok: false, message }
     } finally {
       setLoading(false)
@@ -97,6 +81,7 @@ function MyBookingsPage() {
   return (
     <>
       <Header />
+      <Toaster position="top-right" />
       <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
         <section className="mx-auto max-w-7xl space-y-6">
           <div className="space-y-2">
@@ -106,9 +91,6 @@ function MyBookingsPage() {
             </p>
           </div>
 
-          <ErrorAlert message={error} />
-          <SuccessAlert message={success} />
-
           {loading ? <LoadingSpinner label="Loading your bookings..." /> : null}
 
           <BookingTable
@@ -116,6 +98,7 @@ function MyBookingsPage() {
             loading={loading}
             isAdmin={false}
             onCancel={handleCancel}
+            onDelete={handleDelete}
             onApprove={() => {}}
             onOpenReject={() => {}}
             onOpenReschedule={setSelectedBooking}
