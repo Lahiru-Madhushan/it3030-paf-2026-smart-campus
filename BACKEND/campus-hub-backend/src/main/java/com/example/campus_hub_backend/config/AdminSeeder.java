@@ -38,5 +38,6 @@ public class AdminSeeder implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             userRepository.save(admin);
         }
+        
     }
 }
