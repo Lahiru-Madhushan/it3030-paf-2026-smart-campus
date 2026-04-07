@@ -17,35 +17,35 @@ import UserHomePage from './components/UserHomePage'
 import TicketList from './components/incidents/TicketList'
 import TicketForm from './components/incidents/TicketForm'
 import TicketDetail from './components/incidents/TicketDetail'
-import AdminOverviewContent from './components/dashboard/AdminOverviewContent'
-import AdminBookingsPage from './pages/AdminBookingsPage'
-import BookingFormPage from './pages/BookingFormPage'
-import MyBookingsPage from './pages/MyBookingsPage'
+import FacilitiesWorkspace from './components/resources/FacilitiesWorkspace'
+import UserFacilitiesPage from './pages/UserFacilitiesPage'
 
 function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/oauth-success" element={<OAuthSuccessPage />} />
-      <Route path="/api/auth/oauth-success" element={<OAuthSuccessPage />} />
-      <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
-      <Route path="/profile" element={<UserProfile />} />
-      <Route path="/user/home" element={<UserHomePage />} />
-      <Route path="/bookings/form" element={<BookingFormPage />} />
-      <Route path="/bookings/my-bookings" element={<MyBookingsPage />} />
-      <Route path="/incidents" element={<TicketList />} />
-      <Route path="/incidents/create" element={<TicketForm />} />
-      <Route path="/incidents/:id" element={<TicketDetail />} />
-      <Route path="/technician/incidents" element={<TicketList />} />
-      <Route path="/technician/incidents/:id" element={<TicketDetail />} />
+ 
+ return (
+  <UserProvider>
+    <BookingProvider>
+      <Routes>  
+        <Route path="/" element={<LandingPage />} />  
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/oauth-success" element={<OAuthSuccessPage />} />
+        <Route path="/api/auth/oauth-success" element={<OAuthSuccessPage />} />
+        <Route path="/api/auth/oauth-success/*" element={<OAuthSuccessPage />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/incidents" element={<TicketList />} />
+        <Route path="/incidents/create" element={<TicketForm />} />
+        <Route path="/incidents/:id" element={<TicketDetail />} />
+        <Route path="/technician/incidents" element={<TicketList />} />
+        <Route path="/technician/incidents/:id" element={<TicketDetail />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard">
-          <Route index element={<Navigate to="user" replace />} />
-          <Route path="user" element={<UserDashboard />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Navigate to="/dashboard/user" replace />} />
+
+          <Route path="/dashboard/user" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
+          <Route path="/user/home" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserHomePage /></RoleRoute>} />
+          <Route path="/user/facilities" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserFacilitiesPage /></RoleRoute>} />
 
           <Route
             path="admin"
@@ -53,14 +53,7 @@ function App() {
           >
             <Route index element={<AdminOverviewContent />} />
             <Route path="users" element={<UserManagement />} />
-            <Route
-              path="resources"
-              element={
-                <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center text-sm text-gray-600">
-                  Resource management is under construction.
-                </div>
-              }
-            />
+            <Route path="resources" element={<FacilitiesWorkspace />} />
             <Route path="bookings" element={<AdminBookingsPage />} />
             <Route path="incidents" element={<TicketList />} />
           </Route>

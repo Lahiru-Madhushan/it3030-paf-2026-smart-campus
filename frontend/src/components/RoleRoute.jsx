@@ -17,5 +17,5 @@ export default function RoleRoute({ allowedRoles, children }) {
     return <Navigate to={getDashboardPath(currentUser.role)} replace />
   }
 
-  return children ?? <Outlet />
+  return children || <Outlet />
 }
