@@ -86,10 +86,7 @@ export default function UserLayout() {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <NotificationBell />
-            <button className="relative rounded-2xl bg-gray-100 p-3 text-gray-700 hover:bg-gray-200">
-              <Bell size={20} />
-              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-yellow-400" />
-            </button>
+           
 
             <button
               onClick={() => navigate('/profile')}
