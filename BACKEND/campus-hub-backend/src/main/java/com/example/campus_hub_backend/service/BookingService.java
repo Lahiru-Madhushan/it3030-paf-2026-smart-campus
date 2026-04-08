@@ -14,6 +14,8 @@ import com.example.campus_hub_backend.exception.ResourceNotFoundException;
 import com.example.campus_hub_backend.repository.BookingRepository;
 import com.example.campus_hub_backend.repository.ResourceRepository;
 import com.example.campus_hub_backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ import com.example.campus_hub_backend.enumtype.NotificationType;
 
 @Service
 public class BookingService {
+    private static final Logger log = LoggerFactory.getLogger(BookingService.class);
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
@@ -120,6 +123,11 @@ public class BookingService {
     @Transactional
     public BookingResponse approveBooking(Long bookingId, String adminEmail) {
         Booking booking = findBookingOrThrow(bookingId);
+        Resource resource = booking.getResource();
+
+        if (resource == null) {
+            throw new BadRequestException("Booking cannot be approved because resource data is missing");
+        }
 
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new BadRequestException("Only PENDING bookings can be approved");
@@ -127,7 +135,7 @@ public class BookingService {
 
         validateTodayTimeNotInPast(booking.getBookingDate(), booking.getStartTime());
         validateResourceBookableForSlot(
-            booking.getResource(),
+            resource,
             booking.getStartTime(),
             booking.getEndTime(),
             booking.getExpectedAttendees());
@@ -151,13 +159,11 @@ public class BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
-        notificationService.createNotification(
-        saved.getUser(),
-        NotificationType.BOOKING_APPROVED,
-        "Booking approved",
-        "Your booking for resource \"" + saved.getResource().getName() + "\" has been approved.",
-        "BOOKING",
-        saved.getId());
+        sendBookingNotificationSafely(
+                saved,
+                NotificationType.BOOKING_APPROVED,
+                "Booking approved",
+                "Your booking for resource \"" + getResourceLabel(saved) + "\" has been approved.");
         return toResponse(saved);
 
 
@@ -178,15 +184,12 @@ public class BookingService {
 
         Booking saved = bookingRepository.save(booking);
 
-        notificationService.createNotification(
-        saved.getUser(),
-        NotificationType.BOOKING_REJECTED,
-        "Booking rejected",
-        "Your booking for resource \"" + saved.getResource().getName() + "\" was rejected. Reason: " + reason,
-        "BOOKING",
-        saved.getId()
-);
-         return toResponse(saved);
+        sendBookingNotificationSafely(
+                saved,
+                NotificationType.BOOKING_REJECTED,
+                "Booking rejected",
+                "Your booking for resource \"" + getResourceLabel(saved) + "\" was rejected. Reason: " + reason);
+        return toResponse(saved);
     }
 
     // ─── Cancel ───────────────────────────────────────────────
@@ -212,18 +215,15 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
-          Booking saved = bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
 
-        notificationService.createNotification(
-        saved.getUser(),
-        NotificationType.BOOKING_CANCELLED,
-        "Booking cancelled",
-        "Your booking for resource \"" + saved.getResource().getName() + "\" has been cancelled.",
-        "BOOKING",
-        saved.getId()
-);
+        sendBookingNotificationSafely(
+                saved,
+                NotificationType.BOOKING_CANCELLED,
+                "Booking cancelled",
+                "Your booking for resource \"" + getResourceLabel(saved) + "\" has been cancelled.");
 
-    return toResponse(saved);
+        return toResponse(saved);
 
     }
 
@@ -320,11 +320,13 @@ public class BookingService {
     /** Maps entity to response DTO */
     private BookingResponse toResponse(Booking booking) {
         BookingResponse response = new BookingResponse();
+        Resource resource = booking.getResource();
+        User user = booking.getUser();
         response.setId(booking.getId());
-        response.setResourceId(booking.getResource().getId());
-        response.setResourceName(booking.getResource().getName());
-        response.setUserId(booking.getUser().getId());
-        response.setUserName(booking.getUser().getName());
+        response.setResourceId(resource != null ? resource.getId() : null);
+        response.setResourceName(resource != null ? resource.getName() : null);
+        response.setUserId(user != null ? user.getId() : null);
+        response.setUserName(user != null ? user.getName() : null);
         response.setBookingDate(booking.getBookingDate());
         response.setStartTime(booking.getStartTime());
         response.setEndTime(booking.getEndTime());
@@ -379,7 +381,9 @@ public class BookingService {
             throw new BadRequestException("Resource '" + resource.getName() + "' needs repair and cannot be booked");
         }
 
-        if (resource.getCapacity() != null && expectedAttendees > resource.getCapacity()) {
+        if (resource.getCapacity() != null
+                && expectedAttendees != null
+                && expectedAttendees > resource.getCapacity()) {
             throw new BadRequestException(
                     "Expected attendees (" + expectedAttendees
                             + ") exceeds resource capacity (" + resource.getCapacity() + ")");
@@ -401,6 +405,30 @@ public class BookingService {
         if (availableTo != null && endTime.isAfter(availableTo)) {
             throw new BadRequestException(
                     "Booking ends after resource availability window (until " + availableTo + ")");
+        }
+    }
+
+    private String getResourceLabel(Booking booking) {
+        return booking.getResource() != null && booking.getResource().getName() != null
+                ? booking.getResource().getName()
+                : "resource";
+    }
+
+    private void sendBookingNotificationSafely(Booking booking,
+                                               NotificationType type,
+                                               String title,
+                                               String message) {
+        try {
+            notificationService.createNotification(
+                    booking.getUser(),
+                    type,
+                    title,
+                    message,
+                    "BOOKING",
+                    booking.getId());
+        } catch (Exception ex) {
+            // Notification failure should not fail booking lifecycle updates.
+            log.warn("Notification creation failed for booking {}: {}", booking.getId(), ex.getMessage());
         }
     }
 }

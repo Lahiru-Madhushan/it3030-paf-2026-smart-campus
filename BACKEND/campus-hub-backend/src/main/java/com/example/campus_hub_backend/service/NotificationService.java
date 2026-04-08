@@ -8,13 +8,18 @@ import com.example.campus_hub_backend.exception.BadRequestException;
 import com.example.campus_hub_backend.exception.ResourceNotFoundException;
 import com.example.campus_hub_backend.repository.NotificationRepository;
 import com.example.campus_hub_backend.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 
 import java.util.List;
 
 @Service
 public class NotificationService {
+    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -25,7 +30,7 @@ public class NotificationService {
         this.userRepository = userRepository;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createNotification(User recipient,
                                    NotificationType type,
                                    String title,
@@ -50,16 +55,31 @@ public class NotificationService {
 
     public List<NotificationResponse> getMyNotifications(String userEmail) {
         User user = getUserByEmail(userEmail);
-
-        return notificationRepository.findByRecipientOrderByCreatedAtDesc(user)
-                .stream()
-                .map(this::mapToDto)
-                .toList();
+        try {
+            return notificationRepository.findByRecipientOrderByCreatedAtDesc(user)
+                    .stream()
+                    .map(this::mapToDto)
+                    .toList();
+        } catch (DataAccessException ex) {
+            if (isMissingNotificationsTable(ex)) {
+                log.warn("Notifications table missing. Returning empty notifications.");
+                return List.of();
+            }
+            throw ex;
+        }
     }
 
     public long getUnreadCount(String userEmail) {
         User user = getUserByEmail(userEmail);
-        return notificationRepository.countByRecipientAndReadFalse(user);
+        try {
+            return notificationRepository.countByRecipientAndReadFalse(user);
+        } catch (DataAccessException ex) {
+            if (isMissingNotificationsTable(ex)) {
+                log.warn("Notifications table missing. Returning unread count 0.");
+                return 0L;
+            }
+            throw ex;
+        }
     }
 
     @Transactional
@@ -114,5 +134,19 @@ public class NotificationService {
         dto.setReferenceId(notification.getReferenceId());
         dto.setCreatedAt(notification.getCreatedAt());
         return dto;
+    }
+
+    private boolean isMissingNotificationsTable(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null
+                    && message.contains("notifications")
+                    && message.contains("doesn't exist")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 }
