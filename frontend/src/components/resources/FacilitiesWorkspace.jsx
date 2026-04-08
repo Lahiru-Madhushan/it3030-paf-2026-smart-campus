@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
 import { authRequest } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -37,6 +38,21 @@ const STATUS_LABELS = {
 const CONDITION_LABELS = {
   GOOD: 'Good',
   REPAIR_NEEDED: 'Repair needed',
+}
+
+const IMAGE_LIBRARY = {
+  labGeneral: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=900&q=80',
+  labProject: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=900&q=80',
+  labCamera: makeInlineAssetImage('Camera Lab', '#f59e0b'),
+  labRobotics: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&q=80',
+  hallStandard: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=900&q=80',
+  hallCamera: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=900&q=80',
+  meeting: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&q=80',
+  projector: 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=900&q=80',
+  cameraSony: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=900&q=80',
+  cameraCanon: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=900&q=80',
+  drone: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=900&q=80',
+  laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&q=80',
 }
 
 const EMPTY_FORM = {
@@ -87,6 +103,7 @@ export default function FacilitiesWorkspace() {
   const [issueDraft, setIssueDraft] = useState({ assetId: '', text: '', severity: 'MEDIUM' })
   const [toast, setToast] = useState(null)
   const [readNotifications, setReadNotifications] = useState([])
+  const [qrCodeUrl, setQrCodeUrl] = useState('')
 
   useEffect(() => {
     if (!token) return
@@ -336,6 +353,38 @@ export default function FacilitiesWorkspace() {
   }))
   const maxMonthly = Math.max(...monthlyTotals.map((entry) => entry.value), 1)
 
+  useEffect(() => {
+    let active = true
+
+    if (!selectedQrAsset) {
+      setQrCodeUrl('')
+      return undefined
+    }
+
+    QRCode.toDataURL(buildQrPayload(selectedQrAsset), {
+      width: 360,
+      margin: 1,
+      color: {
+        dark: '#0f172a',
+        light: '#f8fbff',
+      },
+    })
+      .then((url) => {
+        if (active) {
+          setQrCodeUrl(url)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setQrCodeUrl('')
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [selectedQrAsset])
+
   return (
     <div className="facilities-workspace">
       <div className="facilities-toolbar">
@@ -479,6 +528,13 @@ export default function FacilitiesWorkspace() {
           <div className="facilities-grid">
             {filteredAssets.map((asset) => (
               <article key={asset.id} className="facilities-card facilities-asset">
+                <div className="facilities-asset__media">
+                  <img src={asset.displayImageUrl} alt={asset.name} className="facilities-asset__image" />
+                  <div className="facilities-asset__overlay">
+                    <span className="facilities-tag">{asset.resourceCode}</span>
+                    <span className="facilities-tag">{TYPE_META[asset.resourceType]?.label || asset.resourceType}</span>
+                  </div>
+                </div>
                 <div className="facilities-asset__head">
                   <TypeBadge type={asset.resourceType} />
                   <span
@@ -595,11 +651,29 @@ export default function FacilitiesWorkspace() {
               {selectedQrAsset ? (
                 <div className="facilities-qr-hero">
                   <div className="facilities-qr-hero__code">
-                    <PseudoQr value={buildQrPayload(selectedQrAsset)} />
+                    <div className="facilities-qr-canvas">
+                      {qrCodeUrl ? (
+                        <img
+                          src={qrCodeUrl}
+                          alt={`QR code for ${selectedQrAsset.name}`}
+                          className="facilities-qr-image"
+                        />
+                      ) : (
+                        <PseudoQr value={buildQrPayload(selectedQrAsset)} />
+                      )}
+                    </div>
                     <div className="facilities-actions">
                       <button
                         type="button"
                         className="facilities-button"
+                        onClick={() => downloadQrCode(selectedQrAsset, qrCodeUrl, setToast)}
+                        disabled={!qrCodeUrl}
+                      >
+                        Download QR
+                      </button>
+                      <button
+                        type="button"
+                        className="facilities-button facilities-button--ghost"
                         onClick={() => downloadQrSummary(selectedQrAsset)}
                       >
                         Download summary
@@ -883,6 +957,9 @@ export default function FacilitiesWorkspace() {
       {selectedAsset ? (
         <Modal title={selectedAsset.name} onClose={() => setSelectedAsset(null)}>
           <div className="facilities-stack">
+            <div className="facilities-detail-image">
+              <img src={selectedAsset.displayImageUrl} alt={selectedAsset.name} className="facilities-detail-image__asset" />
+            </div>
             <div className="facilities-detail-head">
               <TypeBadge type={selectedAsset.resourceType} />
               <div>
@@ -1227,6 +1304,71 @@ function PseudoQr({ value }) {
   )
 }
 
+function makeInlineAssetImage(title, accent) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#09111f" />
+          <stop offset="100%" stop-color="#13253d" />
+        </linearGradient>
+        <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${accent}" stop-opacity="0.95" />
+          <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.72" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="900" fill="url(#bg)" />
+      <circle cx="920" cy="210" r="160" fill="${accent}" opacity="0.18" />
+      <circle cx="220" cy="160" r="110" fill="#38bdf8" opacity="0.12" />
+      <rect x="140" y="180" width="920" height="500" rx="32" fill="#0f172a" stroke="#334155" />
+      <rect x="210" y="245" width="460" height="290" rx="22" fill="#020617" stroke="#334155" />
+      <circle cx="440" cy="390" r="115" fill="none" stroke="url(#glow)" stroke-width="28" />
+      <circle cx="440" cy="390" r="56" fill="${accent}" opacity="0.72" />
+      <rect x="720" y="255" width="250" height="26" rx="13" fill="url(#glow)" opacity="0.95" />
+      <rect x="720" y="313" width="170" height="18" rx="9" fill="#475569" />
+      <rect x="720" y="352" width="210" height="18" rx="9" fill="#334155" />
+      <rect x="720" y="391" width="190" height="18" rx="9" fill="#334155" />
+      <rect x="720" y="475" width="190" height="110" rx="22" fill="#111827" stroke="#334155" />
+      <path d="M790 520l28-32 30 36 22-24 40 48H790z" fill="${accent}" opacity="0.9" />
+      <text x="140" y="770" fill="#e2e8f0" font-size="54" font-family="Segoe UI, Arial, sans-serif" font-weight="700">${title}</text>
+      <text x="140" y="822" fill="#94a3b8" font-size="28" font-family="Segoe UI, Arial, sans-serif">Smart Campus Catalogue</text>
+    </svg>
+  `.trim()
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
+function resolveAssetImage(asset) {
+  if (asset.imageUrl) return asset.imageUrl
+
+  const text = [
+    asset.name,
+    asset.category,
+    asset.resourceType,
+    asset.locationText,
+    asset.building,
+    asset.roomNumber,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (text.includes('canon')) return IMAGE_LIBRARY.cameraCanon
+  if (text.includes('sony') || text.includes('fx3')) return IMAGE_LIBRARY.cameraSony
+  if (text.includes('drone')) return IMAGE_LIBRARY.drone
+  if (text.includes('projector')) return IMAGE_LIBRARY.projector
+  if (text.includes('laptop')) return IMAGE_LIBRARY.laptop
+  if (text.includes('robot')) return IMAGE_LIBRARY.labRobotics
+  if (text.includes('meeting room') || text.includes('board room') || text.includes('vip')) return IMAGE_LIBRARY.meeting
+  if (text.includes('camera hall')) return IMAGE_LIBRARY.hallCamera
+  if (text.includes('lecture hall') || text.includes('hall')) return IMAGE_LIBRARY.hallStandard
+  if (text.includes('camera lab') || text.includes('media')) return IMAGE_LIBRARY.labCamera
+  if (text.includes('project lab') || text.includes('project')) return IMAGE_LIBRARY.labProject
+  if (text.includes('lab')) return IMAGE_LIBRARY.labGeneral
+
+  return IMAGE_LIBRARY.labGeneral
+}
+
 function buildQrPayload(asset) {
   return [
     `Name: ${asset.name || '-'}`,
@@ -1254,6 +1396,21 @@ function downloadQrSummary(asset) {
   URL.revokeObjectURL(url)
 }
 
+function downloadQrCode(asset, qrCodeUrl, setToast) {
+  if (!qrCodeUrl) {
+    setToast({ tone: 'danger', message: 'QR image is still being prepared.' })
+    return
+  }
+
+  const link = document.createElement('a')
+  link.href = qrCodeUrl
+  link.download = `${asset.resourceCode || asset.id}-qr.png`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setToast({ tone: 'success', message: 'QR image downloaded successfully.' })
+}
+
 async function copyQrPayload(asset, setToast) {
   try {
     await navigator.clipboard.writeText(buildQrPayload(asset))
@@ -1275,6 +1432,7 @@ function normalizeAsset(resource) {
     issues: Array.isArray(resource.issues) ? resource.issues : [],
     borrowed: Boolean(resource.borrowed),
     condition: resource.condition || 'GOOD',
+    displayImageUrl: resolveAssetImage(resource),
   }
 }
 
