@@ -18,6 +18,7 @@ const PAGE_ITEMS = [
 const TYPE_OPTIONS = ['LECTURE_HALL', 'MEETING_ROOM', 'ROOM', 'LAB', 'EQUIPMENT']
 const STATUS_OPTIONS = ['ACTIVE', 'OUT_OF_SERVICE', 'UNDER_MAINTENANCE', 'INACTIVE', 'AVAILABLE']
 const CONDITION_OPTIONS = ['GOOD', 'REPAIR_NEEDED']
+const FEATURE_OPTIONS = ['Projects', 'Camera']
 
 const TYPE_META = {
   LECTURE_HALL: { label: 'Lecture Hall', icon: 'LH', tone: 'facilities-type--blue' },
@@ -53,34 +54,6 @@ const IMAGE_LIBRARY = {
   cameraCanon: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=900&q=80',
   drone: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=900&q=80',
   laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&q=80',
-}
-
-const EMPTY_FORM = {
-  resourceCode: '',
-  name: '',
-  resourceType: 'EQUIPMENT',
-  category: '',
-  capacity: '0',
-  building: '',
-  floorNumber: '',
-  roomNumber: '',
-  locationText: '',
-  availableFrom: '08:00',
-  availableTo: '17:00',
-  status: 'ACTIVE',
-  condition: 'GOOD',
-  borrowed: false,
-  rating: '0',
-  lastServiceDate: '',
-  nextServiceDate: '',
-  totalBookings: '0',
-  bookingsToday: '0',
-  amenities: '',
-  monthlyBookings: '0,0,0,0,0,0,0,0,0,0,0,0',
-  description: '',
-  imageUrl: '',
-  requiresApproval: false,
-  isActive: true,
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -400,7 +373,7 @@ export default function FacilitiesWorkspace() {
             <button
               type="button"
               className="facilities-button"
-              onClick={() => setEditorState({ original: null, values: EMPTY_FORM })}
+              onClick={() => setEditorState({ original: null, values: buildEmptyForm(assets) })}
             >
               Add asset
             </button>
@@ -1000,9 +973,9 @@ export default function FacilitiesWorkspace() {
       ) : null}
 
       {editorState ? (
-        <Modal title={editorState.original ? 'Edit asset' : 'Create asset'} onClose={() => setEditorState(null)}>
+        <Modal title={editorState.original ? 'Edit Asset' : 'New Asset'} onClose={() => setEditorState(null)}>
           <form className="facilities-form" onSubmit={submitAssetForm}>
-            <Field label="Code">
+            <Field label="Asset ID">
               <input
                 value={editorState.values.resourceCode}
                 onChange={(event) => updateForm(setEditorState, 'resourceCode', event.target.value)}
@@ -1012,7 +985,7 @@ export default function FacilitiesWorkspace() {
             <Field label="Name">
               <input
                 value={editorState.values.name}
-                onChange={(event) => updateForm(setEditorState, 'name', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'name', sanitizeLetterInput(event.target.value))}
                 required
               />
             </Field>
@@ -1031,16 +1004,24 @@ export default function FacilitiesWorkspace() {
             <Field label="Category">
               <input
                 value={editorState.values.category}
-                onChange={(event) => updateForm(setEditorState, 'category', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'category', sanitizeLetterInput(event.target.value))}
                 required
+              />
+            </Field>
+            <Field label="Location" full>
+              <input
+                value={editorState.values.locationText}
+                onChange={(event) => updateForm(setEditorState, 'locationText', event.target.value)}
               />
             </Field>
             <Field label="Capacity">
               <input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={editorState.values.capacity}
-                onChange={(event) => updateForm(setEditorState, 'capacity', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'capacity', sanitizeCapacityInput(event.target.value))}
+                onKeyDown={preventNegativeNumberInput}
               />
             </Field>
             <Field label="Status">
@@ -1067,140 +1048,46 @@ export default function FacilitiesWorkspace() {
                 ))}
               </select>
             </Field>
-            <Field label="Borrowed">
-              <select
-                value={String(editorState.values.borrowed)}
-                onChange={(event) => updateForm(setEditorState, 'borrowed', event.target.value === 'true')}
-              >
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </Field>
-            <Field label="Building">
-              <input
-                value={editorState.values.building}
-                onChange={(event) => updateForm(setEditorState, 'building', event.target.value)}
-              />
-            </Field>
-            <Field label="Floor">
-              <input
-                type="number"
-                value={editorState.values.floorNumber}
-                onChange={(event) => updateForm(setEditorState, 'floorNumber', event.target.value)}
-              />
-            </Field>
-            <Field label="Room">
-              <input
-                value={editorState.values.roomNumber}
-                onChange={(event) => updateForm(setEditorState, 'roomNumber', event.target.value)}
-              />
-            </Field>
-            <Field label="Location">
-              <input
-                value={editorState.values.locationText}
-                onChange={(event) => updateForm(setEditorState, 'locationText', event.target.value)}
-              />
-            </Field>
-            <Field label="Available from">
+            <Field label="Opens">
               <input
                 type="time"
                 value={editorState.values.availableFrom}
                 onChange={(event) => updateForm(setEditorState, 'availableFrom', event.target.value)}
               />
             </Field>
-            <Field label="Available to">
+            <Field label="Closes">
               <input
                 type="time"
                 value={editorState.values.availableTo}
                 onChange={(event) => updateForm(setEditorState, 'availableTo', event.target.value)}
               />
             </Field>
-            <Field label="Rating">
-              <input
-                type="number"
-                min="0"
-                max="5"
-                step="0.1"
-                value={editorState.values.rating}
-                onChange={(event) => updateForm(setEditorState, 'rating', event.target.value)}
+            <Field label="Description" full>
+              <textarea
+                rows="3"
+                value={editorState.values.description}
+                onChange={(event) => updateForm(setEditorState, 'description', event.target.value)}
               />
             </Field>
-            <Field label="Bookings">
-              <input
-                type="number"
-                min="0"
-                value={editorState.values.totalBookings}
-                onChange={(event) => updateForm(setEditorState, 'totalBookings', event.target.value)}
-              />
-            </Field>
-            <Field label="Today">
-              <input
-                type="number"
-                min="0"
-                value={editorState.values.bookingsToday}
-                onChange={(event) => updateForm(setEditorState, 'bookingsToday', event.target.value)}
-              />
-            </Field>
-            <Field label="Last service">
-              <input
-                type="date"
-                value={editorState.values.lastServiceDate}
-                onChange={(event) => updateForm(setEditorState, 'lastServiceDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Next service">
-              <input
-                type="date"
-                value={editorState.values.nextServiceDate}
-                onChange={(event) => updateForm(setEditorState, 'nextServiceDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Amenities">
-              <input
-                value={editorState.values.amenities}
-                onChange={(event) => updateForm(setEditorState, 'amenities', event.target.value)}
-                placeholder="Comma separated"
-              />
-            </Field>
-            <Field label="Monthly bookings">
-              <input
-                value={editorState.values.monthlyBookings}
-                onChange={(event) => updateForm(setEditorState, 'monthlyBookings', event.target.value)}
-                placeholder="12 comma-separated values"
-              />
-            </Field>
-            <Field label="Image URL">
+            <Field label="Image URL" full>
               <input
                 value={editorState.values.imageUrl}
                 onChange={(event) => updateForm(setEditorState, 'imageUrl', event.target.value)}
               />
             </Field>
-            <Field label="Needs approval">
-              <select
-                value={String(editorState.values.requiresApproval)}
-                onChange={(event) =>
-                  updateForm(setEditorState, 'requiresApproval', event.target.value === 'true')
-                }
-              >
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </Field>
-            <Field label="Active">
-              <select
-                value={String(editorState.values.isActive)}
-                onChange={(event) => updateForm(setEditorState, 'isActive', event.target.value === 'true')}
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </Field>
-            <Field label="Description" full>
-              <textarea
-                rows="4"
-                value={editorState.values.description}
-                onChange={(event) => updateForm(setEditorState, 'description', event.target.value)}
-              />
+            <Field label="Features" full>
+              <div className="facilities-feature-list">
+                {FEATURE_OPTIONS.map((feature) => (
+                  <label key={feature} className="facilities-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={editorState.values.amenities.includes(feature)}
+                      onChange={() => toggleFeature(setEditorState, feature)}
+                    />
+                    <span>{feature}</span>
+                  </label>
+                ))}
+              </div>
             </Field>
             <div className="facilities-actions facilities-form__actions">
               <button
@@ -1211,7 +1098,7 @@ export default function FacilitiesWorkspace() {
                 Cancel
               </button>
               <button type="submit" className="facilities-button">
-                Save asset
+                {editorState.original ? 'Save Asset' : 'Add Asset'}
               </button>
             </div>
           </form>
@@ -1228,10 +1115,10 @@ function Modal({ children, title, onClose }) {
     <div className="facilities-modal">
       <div className="facilities-modal__backdrop" onClick={onClose} aria-hidden="true" />
       <div className="facilities-modal__content facilities-card">
-        <div className="facilities-panel__header">
+        <div className="facilities-modal__header">
           <h3>{title}</h3>
-          <button type="button" className="facilities-button facilities-button--ghost" onClick={onClose}>
-            Close
+          <button type="button" className="facilities-modal__close" onClick={onClose} aria-label="Close modal">
+            ×
           </button>
         </div>
         {children}
@@ -1488,7 +1375,7 @@ function assetToForm(asset) {
     nextServiceDate: asset.nextServiceDate || '',
     totalBookings: String(asset.totalBookings ?? 0),
     bookingsToday: String(asset.bookingsToday ?? 0),
-    amenities: (asset.amenities || []).join(', '),
+    amenities: asset.amenities || [],
     monthlyBookings: normalizeMonthlyBookings(asset.monthlyBookings).join(','),
     description: asset.description || '',
     imageUrl: asset.imageUrl || '',
@@ -1498,10 +1385,10 @@ function assetToForm(asset) {
 }
 
 function formToPayload(values, originalAsset) {
-  const monthlyBookings = values.monthlyBookings
-    .split(',')
-    .map((item) => Number(item.trim()))
-    .filter((item) => !Number.isNaN(item))
+  const validationMessage = validateAssetForm(values)
+  if (validationMessage) {
+    throw new Error(validationMessage)
+  }
 
   return {
     ...assetToPayload(originalAsset),
@@ -1510,7 +1397,7 @@ function formToPayload(values, originalAsset) {
     description: values.description.trim(),
     resourceType: values.resourceType,
     category: values.category.trim(),
-    capacity: Number(values.capacity) || 0,
+    capacity: values.capacity === '' ? 0 : Number(values.capacity),
     building: values.building.trim(),
     floorNumber: values.floorNumber === '' ? null : Number(values.floorNumber),
     roomNumber: values.roomNumber.trim(),
@@ -1525,13 +1412,101 @@ function formToPayload(values, originalAsset) {
     nextServiceDate: values.nextServiceDate || null,
     totalBookings: Number(values.totalBookings) || 0,
     bookingsToday: Number(values.bookingsToday) || 0,
-    amenities: values.amenities.split(',').map((item) => item.trim()).filter(Boolean),
-    monthlyBookings: normalizeMonthlyBookings(monthlyBookings),
+    amenities: values.amenities,
+    monthlyBookings: normalizeMonthlyBookings(originalAsset?.monthlyBookings),
     issues: originalAsset?.issues || [],
     imageUrl: values.imageUrl.trim(),
     requiresApproval: Boolean(values.requiresApproval),
     isActive: Boolean(values.isActive),
   }
+}
+
+function buildEmptyForm(assets) {
+  return {
+    resourceCode: generateNextResourceCode(assets),
+    name: '',
+    resourceType: 'LAB',
+    category: '',
+    capacity: '',
+    building: '',
+    floorNumber: '',
+    roomNumber: '',
+    locationText: '',
+    availableFrom: '08:00',
+    availableTo: '18:00',
+    status: 'ACTIVE',
+    condition: 'GOOD',
+    borrowed: false,
+    rating: '0',
+    lastServiceDate: '',
+    nextServiceDate: '',
+    totalBookings: '0',
+    bookingsToday: '0',
+    amenities: [],
+    monthlyBookings: '0,0,0,0,0,0,0,0,0,0,0,0',
+    description: '',
+    imageUrl: '',
+    requiresApproval: false,
+    isActive: true,
+  }
+}
+
+function generateNextResourceCode(assets) {
+  const nextNumber =
+    assets.reduce((max, asset) => {
+      const match = String(asset.resourceCode || '').match(/ASSET-(\d+)/i)
+      return match ? Math.max(max, Number(match[1])) : max
+    }, 0) + 1
+
+  return `ASSET-${nextNumber}`
+}
+
+function sanitizeLetterInput(value) {
+  return value.replace(/[^A-Za-z\s]/g, '')
+}
+
+function sanitizeCapacityInput(value) {
+  if (value === '') return ''
+  const digitsOnly = value.replace(/[^\d]/g, '')
+  return digitsOnly === '' ? '' : String(Number(digitsOnly))
+}
+
+function preventNegativeNumberInput(event) {
+  if (event.key === '-' || event.key === 'e' || event.key === 'E') {
+    event.preventDefault()
+  }
+}
+
+function toggleFeature(setter, feature) {
+  setter((current) => {
+    const features = current.values.amenities.includes(feature)
+      ? current.values.amenities.filter((item) => item !== feature)
+      : [...current.values.amenities, feature]
+
+    return {
+      ...current,
+      values: {
+        ...current.values,
+        amenities: features,
+      },
+    }
+  })
+}
+
+function validateAssetForm(values) {
+  if (!/^[A-Za-z\s]+$/.test(values.name.trim())) {
+    return 'Name can contain letters only.'
+  }
+
+  if (!/^[A-Za-z\s]+$/.test(values.category.trim())) {
+    return 'Category can contain letters only.'
+  }
+
+  if (values.capacity !== '' && Number(values.capacity) < 0) {
+    return 'Capacity cannot be a negative number.'
+  }
+
+  return ''
 }
 
 function normalizeMonthlyBookings(values) {
