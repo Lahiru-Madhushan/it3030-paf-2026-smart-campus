@@ -15,6 +15,7 @@
 .facilities-toolbar__actions,
 .facilities-nav,
 .facilities-panel__header,
+.facilities-modal__header,
 .facilities-actions,
 .facilities-tags,
 .facilities-asset__head,
@@ -30,6 +31,7 @@
 
 .facilities-toolbar,
 .facilities-panel__header,
+.facilities-modal__header,
 .facilities-page-actions,
 .facilities-issue,
 .facilities-maintenance,
@@ -373,6 +375,10 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.facilities-form__actions {
+  justify-content: space-between;
+}
+
 .facilities-detail-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.85rem;
@@ -469,9 +475,39 @@
 .facilities-modal__content {
   position: relative;
   z-index: 1;
-  width: min(920px, 100%);
+  width: min(760px, 100%);
   max-height: 90vh;
   overflow: auto;
+}
+
+.facilities-modal__header {
+  margin-bottom: 1.1rem;
+}
+
+.facilities-modal__close {
+  border: 0;
+  background: transparent;
+  color: #8fa2bc;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.facilities-feature-list {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.facilities-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #dfeaff;
+}
+
+.facilities-checkbox input {
+  width: auto;
 }
 
 .facilities-toast {
@@ -595,6 +631,7 @@
   .facilities-toolbar,
   .facilities-page-actions,
   .facilities-toolbar__actions,
+  .facilities-modal__header,
   .facilities-actions,
   .facilities-issue,
   .facilities-maintenance,
