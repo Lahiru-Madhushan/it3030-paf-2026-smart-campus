@@ -44,6 +44,7 @@ function TicketDetail() {
 
   const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN'
   const isTechnician = user?.role === 'ROLE_TECHNICIAN' || user?.role === 'TECHNICIAN'
+  const isUser = user?.role === 'USER' || user?.role === 'ROLE_USER'
 
   useEffect(() => {
     if (token) {
@@ -174,13 +175,13 @@ function TicketDetail() {
   if (!token) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Please login to view this ticket.
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
@@ -188,13 +189,13 @@ function TicketDetail() {
   if (loading) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Loading ticket...
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
@@ -202,13 +203,13 @@ function TicketDetail() {
   if (error) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Error: {error}
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
@@ -216,13 +217,13 @@ function TicketDetail() {
   if (!ticket) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Ticket not found or you don&apos;t have permission to view it.
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
@@ -232,7 +233,7 @@ function TicketDetail() {
 
   return (
     <>
-      <Header />
+      {isUser && <Header />}
       <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Back button */}
@@ -546,7 +547,7 @@ function TicketDetail() {
       </div>
         </div>
       </section>
-      <Footer />
+      {isUser && <Footer />}
     </>
   )
 }
