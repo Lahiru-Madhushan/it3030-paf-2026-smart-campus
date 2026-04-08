@@ -5,6 +5,7 @@ import BookingTable from '../components/booking/BookingTable'
 import RescheduleBookingModal from '../components/booking/RescheduleBookingModal'
 import LoadingSpinner from '../components/common/LoadingSpinner'
 import Header from '../components/dashboard/UserDashboard'
+import Footer from '../components/dashboard/userFooter'
 import { getBookingErrorMessage } from '../utils/bookingErrorMessages'
 
 function MyBookingsPage() {
@@ -113,6 +114,7 @@ function MyBookingsPage() {
           />
         </section>
       </div>
+      <Footer />
     </>
   )
 }

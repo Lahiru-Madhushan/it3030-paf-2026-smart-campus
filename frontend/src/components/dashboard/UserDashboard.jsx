@@ -23,7 +23,7 @@ export default function UserLayout() {
     { label: 'Facilities', path: '/user/facilities' },
     { label: 'Booking', path: '/bookings/new' },
     { label: 'My Bookings', path: '/bookings/my-bookings' },
-    { label: 'Ticket', path: '/user/ticket' },
+    { label: 'Ticket', path: '/incidents' },
   ]
 
   const isActive = (path) => {

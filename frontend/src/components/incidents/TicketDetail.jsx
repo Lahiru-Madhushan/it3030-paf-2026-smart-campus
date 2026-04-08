@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ticketService } from '../../services/ticketService'
 import { useAuth } from '../../context/AuthContext'
 import SLATimer from './SLATimer'
+import Header from '../dashboard/UserDashboard'
+import Footer from '../dashboard/userFooter'
 
 const statusColors = {
   OPEN: { bg: '#E6F1FB', text: '#0C447C', border: '#185FA5' },
@@ -169,36 +171,70 @@ function TicketDetail() {
     return `${hours}h`
   }
 
-  if (!token) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
-      Please login to view this ticket.
-    </div>
-  )
+  if (!token) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
+            Please login to view this ticket.
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
-      Loading ticket...
-    </div>
-  )
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
+            Loading ticket...
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
-  if (error) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#A32D2D' }}>
-      Error: {error}
-    </div>
-  )
+  if (error) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
+            Error: {error}
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
-  if (!ticket) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#A32D2D' }}>
-      Ticket not found or you don't have permission to view it.
-    </div>
-  )
+  if (!ticket) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
+            Ticket not found or you don&apos;t have permission to view it.
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
   const status = statusColors[ticket.status] || statusColors.OPEN
   const nextStatuses = validTransitions[ticket.status] || []
 
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px' }}>
-
+    <>
+      <Header />
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Back button */}
       <button
         onClick={() => navigate(-1)}
@@ -481,7 +517,7 @@ function TicketDetail() {
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim()}
-              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
+              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#facc15', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
             >
               Add Comment
             </button>
@@ -508,7 +544,10 @@ function TicketDetail() {
           </div>
         )}
       </div>
-    </div>
+        </div>
+      </section>
+      <Footer />
+    </>
   )
 }
 
