@@ -22,12 +22,15 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.example.campus_hub_backend.enumtype.NotificationType;
+
 @Service
 public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final ResourceRepository resourceRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     /** Statuses that block a time slot and should be considered for conflict checks */
     private static final List<BookingStatus> BLOCKING_STATUSES =
@@ -35,10 +38,12 @@ public class BookingService {
 
     public BookingService(BookingRepository bookingRepository,
                           ResourceRepository resourceRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          NotificationService notificationService) {
         this.bookingRepository = bookingRepository;
         this.resourceRepository = resourceRepository;
         this.userRepository = userRepository;
+          this.notificationService = notificationService;
     }
 
     // ─── Create Booking ────────────────────────────────────────
@@ -144,7 +149,18 @@ public class BookingService {
         booking.setApprovedBy(adminEmail);
         booking.setApprovedAt(LocalDateTime.now());
 
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+
+        notificationService.createNotification(
+        saved.getUser(),
+        NotificationType.BOOKING_APPROVED,
+        "Booking approved",
+        "Your booking for resource \"" + saved.getResource().getName() + "\" has been approved.",
+        "BOOKING",
+        saved.getId());
+        return toResponse(saved);
+
+
     }
 
     // ─── Reject ───────────────────────────────────────────────
@@ -160,7 +176,17 @@ public class BookingService {
         booking.setStatus(BookingStatus.REJECTED);
         booking.setRejectionReason(reason);
 
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+
+        notificationService.createNotification(
+        saved.getUser(),
+        NotificationType.BOOKING_REJECTED,
+        "Booking rejected",
+        "Your booking for resource \"" + saved.getResource().getName() + "\" was rejected. Reason: " + reason,
+        "BOOKING",
+        saved.getId()
+);
+         return toResponse(saved);
     }
 
     // ─── Cancel ───────────────────────────────────────────────
@@ -186,7 +212,19 @@ public class BookingService {
         }
 
         booking.setStatus(BookingStatus.CANCELLED);
-        return toResponse(bookingRepository.save(booking));
+          Booking saved = bookingRepository.save(booking);
+
+        notificationService.createNotification(
+        saved.getUser(),
+        NotificationType.BOOKING_CANCELLED,
+        "Booking cancelled",
+        "Your booking for resource \"" + saved.getResource().getName() + "\" has been cancelled.",
+        "BOOKING",
+        saved.getId()
+);
+
+    return toResponse(saved);
+
     }
 
     // ─── Reschedule ───────────────────────────────────────────
