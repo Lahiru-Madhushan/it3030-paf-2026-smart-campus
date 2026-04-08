@@ -44,22 +44,19 @@ public class IncidentTicket {
     private String location;
 
     private String contactDetails;
-
     private String rejectionReason;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private LocalDateTime updatedAt = LocalDateTime.now();
-
     private LocalDateTime resolvedAt;
+    private LocalDateTime firstResponseAt;
 
-    // Who created the ticket
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User createdBy;
 
-    // Assigned technician
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "technician_id")
     private User assignedTo;

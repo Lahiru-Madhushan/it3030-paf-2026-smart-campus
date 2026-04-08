@@ -21,6 +21,9 @@ public class TicketComment {
     @Column(nullable = false, length = 1000)
     private String content;
 
+    @Column(nullable = false)
+    private boolean resolutionNote = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -32,7 +35,6 @@ public class TicketComment {
     @JoinColumn(name = "ticket_id", nullable = false)
     private IncidentTicket ticket;
 
-    // Who wrote this comment
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User createdBy;

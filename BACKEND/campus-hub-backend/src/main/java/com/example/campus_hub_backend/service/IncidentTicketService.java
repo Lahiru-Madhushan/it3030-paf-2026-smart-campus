@@ -158,6 +158,7 @@ public class IncidentTicketService {
         dto.setCreatedAt(ticket.getCreatedAt());
         dto.setUpdatedAt(ticket.getUpdatedAt());
         dto.setResolvedAt(ticket.getResolvedAt());
+        dto.setFirstResponseAt(ticket.getFirstResponseAt());
 
         if (ticket.getCreatedBy() != null) {
             dto.setCreatedByName(ticket.getCreatedBy().getName());

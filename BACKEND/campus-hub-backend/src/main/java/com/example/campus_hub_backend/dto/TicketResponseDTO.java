@@ -9,7 +9,6 @@ import java.util.List;
 
 @Data
 public class TicketResponseDTO {
-
     private Long id;
     private String title;
     private String description;
@@ -22,19 +21,12 @@ public class TicketResponseDTO {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime resolvedAt;
-
-    // Who created the ticket
+    private LocalDateTime firstResponseAt;
     private String createdByName;
     private String createdByEmail;
-
-    // Assigned technician
     private String assignedToName;
     private String assignedToEmail;
-
-    // Comments and attachments count
     private int totalComments;
     private int totalAttachments;
-
-    // List of attachment file paths
     private List<String> attachmentPaths;
 }
