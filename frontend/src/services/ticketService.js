@@ -15,6 +15,9 @@ export const ticketService = {
   // Get my tickets (User)
   getMyTickets: (token) => authRequest('/api/tickets/my', token),
 
+  // Get assigned tickets (Technician)
+  getAssignedTickets: (token) => authRequest('/api/tickets/assigned', token),
+
   // Get one ticket by id
   getTicketById: (token, id) => authRequest(`/api/tickets/${id}`, token),
 
