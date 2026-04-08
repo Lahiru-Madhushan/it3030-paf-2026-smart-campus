@@ -29,6 +29,7 @@ public class TicketComment {
 
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Which ticket this comment belongs to
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id", nullable = false)

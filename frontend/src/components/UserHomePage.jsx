@@ -35,7 +35,7 @@ export default function UserHomePage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <button
-                onClick={() => navigate('/user/booking')}
+                onClick={() => navigate('/bookings/new')}
                 className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-yellow-500"
               >
                 Start Booking
@@ -100,7 +100,7 @@ export default function UserHomePage() {
 
         <div className="grid gap-6 md:grid-cols-3">
           <button
-            onClick={() => navigate('/user/booking')}
+            onClick={() => navigate('/bookings/new')}
             className="group rounded-3xl border border-gray-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
           >
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-100 text-yellow-700">

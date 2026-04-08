@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Bell,
@@ -7,9 +6,10 @@ import {
   BookOpen,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import NotificationBell from '../notifications/NotificationBell'
 
 export default function UserLayout() {
-  const { auth, logout } = useAuth()
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -18,25 +18,11 @@ export default function UserLayout() {
     navigate('/')
   }
 
-  useEffect(() => {
-    if (!auth?.token) {
-      navigate('/')
-      return
-    }
-
-    const timer = setTimeout(() => {
-      logout()
-      alert('Session expired. Please login again.')
-      navigate('/')
-    }, 30 * 60 * 1000)
-
-    return () => clearTimeout(timer)
-  }, [auth, logout, navigate])
-
   const navItems = [
     { label: 'Home', path: '/user/home' },
     { label: 'Facilities', path: '/user/facilities' },
-    { label: 'Booking', path: '/user/booking' },
+    { label: 'Booking', path: '/bookings/new' },
+    { label: 'My Bookings', path: '/bookings/my-bookings' },
     { label: 'Ticket', path: '/user/ticket' },
   ]
 
@@ -83,11 +69,8 @@ export default function UserLayout() {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            
-            <button className="relative rounded-2xl bg-gray-100 p-3 text-gray-700 hover:bg-gray-200">
-              <Bell size={20} />
-              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-yellow-400" />
-            </button>
+            <NotificationBell />
+           
 
             <button
               onClick={() => navigate('/profile')}
