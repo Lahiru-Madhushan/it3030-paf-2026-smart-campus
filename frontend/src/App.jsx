@@ -50,6 +50,7 @@ function App() {
           <Route path="/user/facilities" element={<RoleRoute allowedRoles={[ROLES.USER]}><UserFacilitiesPage /></RoleRoute>} />
           <Route path="/bookings/new" element={<RoleRoute allowedRoles={[ROLES.USER]}><BookingFormPage /></RoleRoute>} />
           <Route path="/bookings/my-bookings" element={<RoleRoute allowedRoles={[ROLES.USER]}><MyBookingsPage /></RoleRoute>} />
+          
 
           <Route
             path="/dashboard/admin"

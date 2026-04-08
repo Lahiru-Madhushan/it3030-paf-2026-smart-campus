@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ticketService } from '../../services/ticketService'
 import { useAuth } from '../../context/AuthContext'
 import TicketCard from './TicketCard'
+import Header from '../dashboard/UserDashboard'
+import Footer from '../dashboard/userFooter'
 
 function TicketList() {
   const { auth, currentUser } = useAuth()
@@ -53,22 +55,40 @@ function TicketList() {
     return matchStatus && matchPriority && matchSearch
   })
 
-  if (loading) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>
-      Loading tickets...
-    </div>
-  )
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
+            Loading tickets...
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
-  if (error) return (
-    <div style={{ textAlign: 'center', padding: '60px', color: '#A32D2D' }}>
-      Error: {error}
-    </div>
-  )
+  if (error) {
+    return (
+      <>
+        <Header />
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
+            Error: {error}
+          </div>
+        </section>
+        <Footer />
+      </>
+    )
+  }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '24px' }}>
-
-      {/* Header */}
+    <>
+      <Header />
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
+      {/* Page title row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <div>
           <h1 style={{ margin: 0, fontSize: '24px', fontWeight: '700', color: '#1a1a1a' }}>
@@ -84,7 +104,7 @@ function TicketList() {
           <button
             onClick={() => navigate('/incidents/create')}
             style={{
-              background: '#185FA5',
+              background: '#facc15',
               color: '#fff',
               border: 'none',
               borderRadius: '8px',
@@ -166,7 +186,10 @@ function TicketList() {
           />
         ))
       )}
-    </div>
+        </div>
+      </section>
+      <Footer />
+    </>
   )
 }
 
