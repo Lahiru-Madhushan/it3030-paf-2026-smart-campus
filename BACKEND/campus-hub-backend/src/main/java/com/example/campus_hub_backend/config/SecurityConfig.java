@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 "/api/chat"
                         ).permitAll()
                         // Admin user management
+                        .requestMatchers(HttpMethod.POST, "/api/resources/*/issues").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/resources/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/resources/**").hasRole("ADMIN")

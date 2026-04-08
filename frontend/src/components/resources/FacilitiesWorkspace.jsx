@@ -79,6 +79,7 @@ export default function FacilitiesWorkspace() {
   const [error, setError] = useState('')
   const [page, setPage] = useState('dashboard')
   const [search, setSearch] = useState('')
+  const [qrSearch, setQrSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [selectedAsset, setSelectedAsset] = useState(null)
@@ -141,6 +142,17 @@ export default function FacilitiesWorkspace() {
       return matchesType && matchesStatus && matchesSearch
     })
   }, [assets, search, typeFilter, statusFilter])
+
+  const qrAssets = useMemo(() => {
+    const query = qrSearch.trim().toLowerCase()
+    if (!query) return assets
+
+    return assets.filter((asset) =>
+      [asset.resourceCode, asset.name, asset.category, asset.locationText, asset.description]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query)),
+    )
+  }, [assets, qrSearch])
 
   const issueRows = useMemo(
     () =>
@@ -245,33 +257,43 @@ export default function FacilitiesWorkspace() {
   }
 
   async function reportIssue() {
-    if (!issueDraft.assetId || !issueDraft.text.trim()) {
+    const trimmedText = issueDraft.text.trim()
+
+    if (!issueDraft.assetId || !trimmedText) {
       setToast({ tone: 'danger', message: 'Choose an asset and describe the issue first.' })
       return
     }
 
-    const asset = assets.find((item) => String(item.id) === issueDraft.assetId)
-    if (!asset) return
+    if (!token) {
+      setToast({ tone: 'danger', message: 'Please sign in again to report an issue.' })
+      return
+    }
 
-    await patchAsset(
-      asset,
-      {
-        issues: [
-          ...asset.issues,
-          {
-            id: `ISS-${Date.now()}`,
-            text: issueDraft.text.trim(),
+    try {
+      const updatedAsset = normalizeAsset(
+        await authRequest(`/api/resources/${issueDraft.assetId}/issues`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            text: trimmedText,
             severity: issueDraft.severity,
-            status: 'OPEN',
-            date: new Date().toISOString().slice(0, 10),
-          },
-        ],
-        condition: 'REPAIR_NEEDED',
-      },
-      'Issue report sent to maintenance.',
-    )
+          }),
+        }),
+      )
 
-    setIssueDraft({ assetId: issueDraft.assetId, text: '', severity: 'MEDIUM' })
+      setAssets((current) =>
+        current
+          .map((asset) => (asset.id === updatedAsset.id ? updatedAsset : asset))
+          .sort((left, right) => left.name.localeCompare(right.name)),
+      )
+      setSelectedAsset((current) => (current?.id === updatedAsset.id ? updatedAsset : current))
+      setIssueDraft({ assetId: String(updatedAsset.id), text: '', severity: 'MEDIUM' })
+      setToast({
+        tone: 'success',
+        message: isAdmin ? 'Issue report added to the asset log.' : 'Issue report sent to the facilities team.',
+      })
+    } catch (reportError) {
+      setToast({ tone: 'danger', message: reportError.message })
+    }
   }
 
   async function resolveIssue(issueRow) {
@@ -302,7 +324,8 @@ export default function FacilitiesWorkspace() {
     )
   }
 
-  const selectedQrAsset = assets.find((asset) => String(asset.id) === issueDraft.assetId) || assets[0]
+  const selectedQrAsset =
+    qrAssets.find((asset) => String(asset.id) === issueDraft.assetId) || qrAssets[0] || assets[0]
   const availableNow = assets.filter((asset) => asset.status === 'ACTIVE' && !asset.borrowed).length
   const borrowedCount = assets.filter((asset) => asset.borrowed).length
   const openIssueCount = issueRows.filter((issue) => issue.status !== 'RESOLVED').length
@@ -531,76 +554,146 @@ export default function FacilitiesWorkspace() {
       ) : null}
 
       {!loading && page === 'qr' ? (
-        <section className="facilities-split">
-          <div className="facilities-card facilities-panel">
+        <section className="facilities-qr-workspace">
+          <aside className="facilities-card facilities-panel facilities-qr-sidebar">
             <div className="facilities-panel__header">
-              <h3>Asset QR surface</h3>
-              <span>Scan-safe view</span>
+              <h3>Tracked assets</h3>
+              <span>{qrAssets.length} shown</span>
             </div>
-            {selectedQrAsset ? (
-              <div className="facilities-stack">
-                <div>
-                  <p className="facilities-eyebrow">{selectedQrAsset.resourceCode}</p>
-                  <h3>{selectedQrAsset.name}</h3>
-                  <p className="facilities-muted">{selectedQrAsset.locationText}</p>
-                </div>
-                <PseudoQr value={`${selectedQrAsset.resourceCode}-${selectedQrAsset.name}`} />
-                <div className="facilities-tags">
-                  <span className="facilities-tag">{STATUS_LABELS[selectedQrAsset.status] || selectedQrAsset.status}</span>
-                  <span className="facilities-tag">
-                    {CONDITION_LABELS[selectedQrAsset.condition] || selectedQrAsset.condition}
-                  </span>
-                  <span className="facilities-tag">
-                    {selectedQrAsset.availableFrom || '--'} - {selectedQrAsset.availableTo || '--'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="facilities-muted">No assets available to generate a QR summary.</p>
-            )}
-          </div>
+            <input
+              value={qrSearch}
+              onChange={(event) => setQrSearch(event.target.value)}
+              placeholder="Search code, name, location"
+            />
+            <div className="facilities-qr-sidebar__list">
+              {qrAssets.map((asset) => (
+                <button
+                  key={asset.id}
+                  type="button"
+                  className={`facilities-qr-sidebar__item ${selectedQrAsset?.id === asset.id ? 'is-active' : ''}`}
+                  onClick={() => setIssueDraft((current) => ({ ...current, assetId: String(asset.id) }))}
+                >
+                  <strong>{asset.resourceCode || asset.id}</strong>
+                  <span>{asset.name}</span>
+                  <small>{asset.locationText || 'Location pending'}</small>
+                </button>
+              ))}
+              {qrAssets.length === 0 ? <p className="facilities-muted">No assets match the current QR search.</p> : null}
+            </div>
+          </aside>
 
-          <div className="facilities-card facilities-panel">
-            <div className="facilities-panel__header">
-              <h3>Report an issue</h3>
-              <span>Backend-backed update</span>
+          <div className="facilities-stack">
+            <div className="facilities-card facilities-panel">
+              <div className="facilities-panel__header">
+                <div>
+                  <p className="facilities-eyebrow">QR tracking</p>
+                  <h3>{selectedQrAsset?.name || 'Asset QR surface'}</h3>
+                </div>
+                {selectedQrAsset ? <span>{selectedQrAsset.resourceCode}</span> : null}
+              </div>
+
+              {selectedQrAsset ? (
+                <div className="facilities-qr-hero">
+                  <div className="facilities-qr-hero__code">
+                    <PseudoQr value={buildQrPayload(selectedQrAsset)} />
+                    <div className="facilities-actions">
+                      <button
+                        type="button"
+                        className="facilities-button"
+                        onClick={() => downloadQrSummary(selectedQrAsset)}
+                      >
+                        Download summary
+                      </button>
+                      <button
+                        type="button"
+                        className="facilities-button facilities-button--ghost"
+                        onClick={() => copyQrPayload(selectedQrAsset, setToast)}
+                      >
+                        Copy payload
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="facilities-stack facilities-grow">
+                    <p className="facilities-muted">
+                      {selectedQrAsset.description || 'No description provided yet.'}
+                    </p>
+                    <div className="facilities-detail-grid">
+                      <Fact
+                        label="Type"
+                        value={TYPE_META[selectedQrAsset.resourceType]?.label || selectedQrAsset.resourceType}
+                      />
+                      <Fact label="Category" value={selectedQrAsset.category || '-'} />
+                      <Fact label="Capacity" value={selectedQrAsset.capacity} />
+                      <Fact label="Bookings" value={selectedQrAsset.totalBookings} />
+                      <Fact label="Status" value={STATUS_LABELS[selectedQrAsset.status] || selectedQrAsset.status} />
+                      <Fact
+                        label="Condition"
+                        value={CONDITION_LABELS[selectedQrAsset.condition] || selectedQrAsset.condition}
+                      />
+                    </div>
+                    <div className="facilities-tags">
+                      <span className="facilities-tag">{selectedQrAsset.locationText || 'Unknown location'}</span>
+                      <span className="facilities-tag">
+                        {selectedQrAsset.availableFrom || '--'} - {selectedQrAsset.availableTo || '--'}
+                      </span>
+                      <span className="facilities-tag">
+                        {selectedQrAsset.borrowed ? 'Borrowed' : 'Ready to use'}
+                      </span>
+                    </div>
+                    <div className="facilities-qr-payload">
+                      <span className="facilities-eyebrow">QR payload</span>
+                      <code>{buildQrPayload(selectedQrAsset)}</code>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="facilities-muted">No assets available to generate a QR summary.</p>
+              )}
             </div>
-            <div className="facilities-stack">
-              <Field label="Asset">
-                <select
-                  value={issueDraft.assetId}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, assetId: event.target.value }))}
-                >
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.resourceCode} - {asset.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Severity">
-                <select
-                  value={issueDraft.severity}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, severity: event.target.value }))}
-                >
-                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((severity) => (
-                    <option key={severity} value={severity}>
-                      {severity}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Issue details" full>
-                <textarea
-                  rows="5"
-                  value={issueDraft.text}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, text: event.target.value }))}
-                  placeholder="Describe the problem noticed during usage or scanning."
-                />
-              </Field>
-              <button type="button" className="facilities-button" onClick={reportIssue}>
-                Submit report
-              </button>
+
+            <div className="facilities-card facilities-panel">
+              <div className="facilities-panel__header">
+                <h3>Report an issue</h3>
+                <span>{isAdmin ? 'Admin and user intake' : 'Send to facilities team'}</span>
+              </div>
+              <div className="facilities-stack">
+                <Field label="Asset">
+                  <select
+                    value={issueDraft.assetId}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, assetId: event.target.value }))}
+                  >
+                    {assets.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.resourceCode} - {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Severity">
+                  <select
+                    value={issueDraft.severity}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, severity: event.target.value }))}
+                  >
+                    {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((severity) => (
+                      <option key={severity} value={severity}>
+                        {severity}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Issue details" full>
+                  <textarea
+                    rows="5"
+                    value={issueDraft.text}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, text: event.target.value }))}
+                    placeholder="Describe the problem noticed during usage or scanning."
+                  />
+                </Field>
+                <button type="button" className="facilities-button" onClick={reportIssue}>
+                  Submit report
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -632,7 +725,7 @@ export default function FacilitiesWorkspace() {
                     <h3>{issue.assetName}</h3>
                     <p>{issue.text}</p>
                     <span className="facilities-muted">
-                      {issue.locationText || 'Location pending'} · {issue.date || 'No date'}
+                      {issue.locationText || 'Location pending'} | {issue.date || 'No date'}
                     </span>
                   </div>
                   {isAdmin && issue.status !== 'RESOLVED' ? (
@@ -716,7 +809,7 @@ export default function FacilitiesWorkspace() {
                     <h3>{asset.name}</h3>
                     <p>{asset.locationText}</p>
                     <span className="facilities-muted">
-                      Last service {asset.lastServiceDate || 'unknown'} · Next service{' '}
+                      Last service {asset.lastServiceDate || 'unknown'} | Next service{' '}
                       {asset.nextServiceDate || 'unscheduled'}
                     </span>
                   </div>
@@ -1132,6 +1225,42 @@ function PseudoQr({ value }) {
       ))}
     </div>
   )
+}
+
+function buildQrPayload(asset) {
+  return [
+    `Name: ${asset.name || '-'}`,
+    `Code: ${asset.resourceCode || asset.id || '-'}`,
+    `Type: ${TYPE_META[asset.resourceType]?.label || asset.resourceType || '-'}`,
+    `Category: ${asset.category || '-'}`,
+    `Location: ${asset.locationText || '-'}`,
+    `Capacity: ${asset.capacity ?? '-'}`,
+    `Status: ${STATUS_LABELS[asset.status] || asset.status || '-'}`,
+    `Available: ${asset.availableFrom || '--'} - ${asset.availableTo || '--'}`,
+    `Condition: ${CONDITION_LABELS[asset.condition] || asset.condition || '-'}`,
+    `Description: ${asset.description || 'No description available.'}`,
+  ].join('\n')
+}
+
+function downloadQrSummary(asset) {
+  const blob = new Blob([buildQrPayload(asset)], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${asset.resourceCode || asset.id}-qr-summary.txt`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+async function copyQrPayload(asset, setToast) {
+  try {
+    await navigator.clipboard.writeText(buildQrPayload(asset))
+    setToast({ tone: 'success', message: 'QR payload copied to the clipboard.' })
+  } catch {
+    setToast({ tone: 'danger', message: 'Clipboard access is blocked in this browser.' })
+  }
 }
 
 function normalizeAsset(resource) {
