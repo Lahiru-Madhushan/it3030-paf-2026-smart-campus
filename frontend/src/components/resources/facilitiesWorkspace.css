@@ -245,6 +245,39 @@
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  overflow: hidden;
+}
+
+.facilities-asset__media,
+.facilities-detail-image {
+  position: relative;
+  overflow: hidden;
+  border-radius: 18px;
+  min-height: 180px;
+  background: linear-gradient(135deg, rgba(42, 140, 255, 0.18), rgba(8, 17, 26, 0.8));
+}
+
+.facilities-detail-image {
+  min-height: 240px;
+}
+
+.facilities-asset__image,
+.facilities-detail-image__asset,
+.facilities-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.facilities-asset__overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: linear-gradient(180deg, transparent, rgba(8, 17, 26, 0.92));
 }
 
 .facilities-grow {
@@ -510,6 +543,15 @@
   align-items: flex-start;
 }
 
+.facilities-qr-canvas {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  padding: 1rem;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0.96), rgba(229, 239, 252, 0.92));
+}
+
 .facilities-qr-hero__code {
   flex: 0 0 250px;
   display: flex;
@@ -564,5 +606,10 @@
 
   .facilities-workspace {
     padding: 1rem;
+  }
+
+  .facilities-asset__media,
+  .facilities-detail-image {
+    min-height: 160px;
   }
 }
