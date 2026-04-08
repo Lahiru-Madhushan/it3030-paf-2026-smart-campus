@@ -1,6 +1,8 @@
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getDashboardPath } from '../utils/roleRedirect'
+import frontImage from '../assets/front.jpg'
+import logo1 from '../assets/logo1.png'
 
 export default function LandingPage() {
   const { currentUser, isAuthenticated } = useAuth()
@@ -14,7 +16,11 @@ export default function LandingPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
 
         :root {
           --white: #ffffff;
@@ -22,11 +28,13 @@ export default function LandingPage() {
           --ash-mid: #e4e4e7;
           --ash-deep: #a1a1aa;
           --ash-dark: #52525b;
-          --yellow: #f5c518;
-          --yellow-light: #fef9e3;
-          --yellow-dark: #d4a00a;
+          --primary: #0A192F;
+          --primary-light: #e8edf5;
+          --primary-dark: #081425;
           --text: #18181b;
           --text-soft: #52525b;
+          --overlay-dark: rgba(0, 0, 0, 0.58);
+          --overlay-soft: rgba(0, 0, 0, 0.32);
         }
 
         .lp-root {
@@ -39,7 +47,6 @@ export default function LandingPage() {
           flex-direction: column;
         }
 
-        /* HEADER */
         .lp-header {
           position: sticky;
           top: 0;
@@ -61,20 +68,11 @@ export default function LandingPage() {
           text-decoration: none;
         }
 
-        .lp-logo-mark {
-          width: 38px;
-          height: 38px;
-          background: var(--yellow);
-          border-radius: 10px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: 'Sora', sans-serif;
-          font-weight: 800;
-          font-size: 14px;
-          color: #fff;
-          letter-spacing: 0.5px;
-          box-shadow: 0 2px 8px rgba(245,197,24,0.35);
+        .lp-logo-img {
+          width: 42px;
+          height: 42px;
+          object-fit: contain;
+          border-radius: 8px;
         }
 
         .lp-logo-name {
@@ -117,35 +115,50 @@ export default function LandingPage() {
         .lp-btn-primary {
           padding: 9px 22px;
           border-radius: 10px;
-          background: var(--yellow);
+          background: var(--primary);
           color: #fff;
           font-size: 14px;
           font-weight: 600;
           text-decoration: none;
           transition: background 0.18s, box-shadow 0.18s;
           font-family: 'DM Sans', sans-serif;
-          box-shadow: 0 2px 8px rgba(245,197,24,0.3);
+          box-shadow: 0 2px 8px rgba(10,25,47,0.3);
         }
 
         .lp-btn-primary:hover {
-          background: var(--yellow-dark);
-          box-shadow: 0 4px 14px rgba(245,197,24,0.4);
+          background: var(--primary-dark);
+          box-shadow: 0 4px 14px rgba(10,25,47,0.4);
         }
 
-        /* HERO - FULL WIDTH SINGLE COLUMN */
         .lp-hero {
           flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
           width: 100%;
+          min-height: calc(100vh - 68px);
+          position: relative;
+          background-image:
+            linear-gradient(135deg, var(--overlay-dark), var(--overlay-soft)),
+            url(${frontImage});
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
+
+        .lp-hero::before {
+          content: '';
+          position: absolute;
+          inset: 0;
           background:
-            radial-gradient(circle at top right, rgba(245,197,24,0.12), transparent 20%),
-            radial-gradient(circle at bottom left, rgba(161,161,170,0.10), transparent 22%),
-            linear-gradient(to bottom, #ffffff, #fafafa);
+            radial-gradient(circle at top right, rgba(10,25,47,0.22), transparent 22%),
+            radial-gradient(circle at bottom left, rgba(255,255,255,0.12), transparent 25%);
+          pointer-events: none;
         }
 
         .lp-hero-left {
+          position: relative;
+          z-index: 1;
           width: 100%;
           max-width: 1100px;
           margin: 0 auto;
@@ -156,71 +169,38 @@ export default function LandingPage() {
           text-align: center;
         }
 
-        .lp-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: var(--yellow-light);
-          border: 1px solid rgba(245,197,24,0.3);
-          color: #b07d00;
-          padding: 5px 14px;
-          border-radius: 999px;
-          font-size: 12px;
-          font-weight: 600;
-          margin-bottom: 24px;
-          width: fit-content;
-          text-transform: uppercase;
-          letter-spacing: 0.7px;
-        }
-
-        .lp-badge::before {
-          content: '';
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: var(--yellow);
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.8); }
-        }
-
         .lp-heading {
           font-family: 'Sora', sans-serif;
           font-size: clamp(32px, 4.2vw, 56px);
           font-weight: 800;
           line-height: 1.15;
-          color: var(--text);
+          color: #ffffff;
           margin-bottom: 20px;
           max-width: 850px;
+          text-shadow: 0 4px 20px rgba(0,0,0,0.28);
         }
 
         .lp-heading .accent {
-          color: var(--yellow-dark);
+          color: #0A192F;
           position: relative;
           display: inline-block;
-        }
-
-        .lp-heading .accent::after {
-          content: '';
-          position: absolute;
-          bottom: 4px;
-          left: 0;
-          right: 0;
-          height: 3px;
-          background: var(--yellow);
-          border-radius: 2px;
-          opacity: 0.5;
+          -webkit-text-stroke: 1px #ffffff;
+          text-stroke: 1px #ffffff;
+          text-shadow:
+            -1px -1px 0 #ffffff,
+             1px -1px 0 #ffffff,
+            -1px  1px 0 #ffffff,
+             1px  1px 0 #ffffff,
+             0 4px 20px rgba(0,0,0,0.28);
         }
 
         .lp-desc {
           font-size: 16px;
-          color: var(--text-soft);
+          color: rgba(255,255,255,0.92);
           line-height: 1.8;
           max-width: 700px;
           margin-bottom: 36px;
+          text-shadow: 0 2px 10px rgba(0,0,0,0.25);
         }
 
         .lp-cta-row {
@@ -236,20 +216,20 @@ export default function LandingPage() {
           gap: 8px;
           padding: 13px 28px;
           border-radius: 12px;
-          background: var(--yellow);
+          background: var(--primary);
           color: #fff;
           font-size: 15px;
           font-weight: 600;
           text-decoration: none;
           transition: all 0.2s;
           font-family: 'DM Sans', sans-serif;
-          box-shadow: 0 4px 16px rgba(245,197,24,0.35);
+          box-shadow: 0 4px 16px rgba(10,25,47,0.35);
         }
 
         .lp-cta-main:hover {
-          background: var(--yellow-dark);
+          background: var(--primary-dark);
           transform: translateY(-1px);
-          box-shadow: 0 6px 20px rgba(245,197,24,0.45);
+          box-shadow: 0 6px 20px rgba(10,25,47,0.45);
         }
 
         .lp-cta-secondary {
@@ -258,30 +238,29 @@ export default function LandingPage() {
           gap: 8px;
           padding: 13px 24px;
           border-radius: 12px;
-          border: 1.5px solid var(--ash-mid);
-          background: transparent;
-          color: var(--text-soft);
+          border: 1.5px solid rgba(255,255,255,0.28);
+          background: rgba(255,255,255,0.08);
+          color: #ffffff;
           font-size: 15px;
           font-weight: 500;
           text-decoration: none;
           transition: all 0.18s;
           font-family: 'DM Sans', sans-serif;
+          backdrop-filter: blur(6px);
         }
 
         .lp-cta-secondary:hover {
-          background: var(--ash-light);
-          color: var(--text);
-          border-color: var(--ash-deep);
+          background: rgba(255,255,255,0.16);
+          border-color: rgba(255,255,255,0.4);
         }
 
-        /* STATS */
         .lp-stats {
           display: flex;
           justify-content: center;
           gap: 28px;
           margin-top: 52px;
           padding-top: 32px;
-          border-top: 1px solid var(--ash-mid);
+          border-top: 1px solid rgba(255,255,255,0.22);
           width: 100%;
           max-width: 720px;
           flex-wrap: wrap;
@@ -298,18 +277,17 @@ export default function LandingPage() {
           font-family: 'Sora', sans-serif;
           font-size: 22px;
           font-weight: 800;
-          color: var(--text);
+          color: #ffffff;
         }
 
         .lp-stat-label {
           font-size: 12px;
-          color: var(--ash-deep);
+          color: rgba(255,255,255,0.78);
           font-weight: 500;
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
 
-        /* FEATURE CARDS */
         .lp-cards-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
@@ -320,41 +298,42 @@ export default function LandingPage() {
         }
 
         .lp-card {
-          background: var(--white);
+          background: rgba(255,255,255,0.12);
           border-radius: 16px;
           padding: 18px 20px;
-          border: 1px solid var(--ash-mid);
-          transition: box-shadow 0.2s, transform 0.2s;
+          border: 1px solid rgba(255,255,255,0.18);
+          transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
           cursor: default;
+          backdrop-filter: blur(8px);
         }
 
         .lp-card:hover {
-          box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+          box-shadow: 0 8px 28px rgba(0,0,0,0.2);
           transform: translateY(-2px);
+          background: rgba(255,255,255,0.16);
         }
 
         .lp-card-icon {
           width: 36px;
           height: 36px;
           border-radius: 10px;
-          background: var(--yellow-light);
+          background: rgba(10,25,47,0.18);
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18px;
           margin: 0 auto 10px;
-          border: 1px solid rgba(245,197,24,0.2);
+          border: 1px solid rgba(10,25,47,0.28);
         }
 
         .lp-card-title {
           font-family: 'Sora', sans-serif;
           font-size: 13.5px;
           font-weight: 700;
-          color: var(--text);
+          color: #ffffff;
           text-align: center;
         }
 
-        /* FOOTER */
         .lp-footer {
           text-align: center;
           padding: 20px 48px;
@@ -364,7 +343,6 @@ export default function LandingPage() {
           background: var(--ash-light);
         }
 
-        /* RESPONSIVE */
         @media (max-width: 900px) {
           .lp-header {
             padding: 0 20px;
@@ -427,10 +405,9 @@ export default function LandingPage() {
       `}</style>
 
       <div className="lp-root">
-        {/* HEADER */}
         <header className="lp-header">
           <div className="lp-logo">
-            <div className="lp-logo-mark">CH</div>
+            <img src={logo1} alt="Campus Hub Logo" className="lp-logo-img" />
             <div>
               <div className="lp-logo-name">Campus Hub</div>
               <div className="lp-logo-sub">Smart Campus Management</div>
@@ -443,19 +420,11 @@ export default function LandingPage() {
           </div>
         </header>
 
-        {/* HERO */}
         <main className="lp-hero">
           <div className="lp-hero-left">
-            <span className="lp-badge">Campus Management</span>
-
             <h1 className="lp-heading">
               One platform for your <span className="accent">entire campus</span>
             </h1>
-
-            <p className="lp-desc">
-              Manage students, staff, and admins with secure OTP verification,
-              role-based dashboards, and real-time campus controls — all in one place.
-            </p>
 
             <div className="lp-cta-row">
               <Link to="/register" className="lp-cta-main">
@@ -475,42 +444,8 @@ export default function LandingPage() {
                 Sign in to your account
               </Link>
             </div>
-
-            <div className="lp-stats">
-              <div className="lp-stat">
-                <span className="lp-stat-num">3</span>
-                <span className="lp-stat-label">User Roles</span>
-              </div>
-              <div className="lp-stat">
-                <span className="lp-stat-num">OTP</span>
-                <span className="lp-stat-label">Verified</span>
-              </div>
-              <div className="lp-stat">
-                <span className="lp-stat-num">100%</span>
-                <span className="lp-stat-label">Secure Access</span>
-              </div>
-            </div>
-
-            <div className="lp-cards-grid">
-              {[
-                { icon: '✉️', title: 'OTP Verification' },
-                { icon: '🔐', title: 'Password Reset' },
-                { icon: '🧭', title: 'Role Dashboards' },
-                { icon: '⚙️', title: 'Admin Controls' },
-              ].map((c) => (
-                <div className="lp-card" key={c.title}>
-                  <div className="lp-card-icon">{c.icon}</div>
-                  <div className="lp-card-title">{c.title}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </main>
-
-        {/* FOOTER */}
-        <footer className="lp-footer">
-          © {new Date().getFullYear()} Campus Hub · Smart Campus Management System
-        </footer>
       </div>
     </>
   )

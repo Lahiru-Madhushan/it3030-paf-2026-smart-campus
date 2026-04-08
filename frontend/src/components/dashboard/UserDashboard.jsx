@@ -1,10 +1,9 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
-  Bell,
   UserCircle2,
   LogOut,
-  BookOpen,
 } from 'lucide-react'
+import logo1 from '../../assets/logo1.png'
 import { useAuth } from '../../context/AuthContext'
 import NotificationBell from '../notifications/NotificationBell'
 
@@ -33,17 +32,16 @@ export default function UserLayout() {
 
   return (
     <div className="bg-white text-gray-800">
-      
       {/* Header / Navbar */}
       <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
-        
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-400 text-white shadow-sm">
-              <BookOpen size={20} />
-            </div>
+            <img
+              src={logo1}
+              alt="Campus Hub Logo"
+              className="h-11 w-11 object-contain"
+            />
             <div>
               <h1 className="text-lg font-bold text-gray-900">Campus Hub</h1>
               <p className="text-xs text-gray-500">Smart Student Services</p>
@@ -58,7 +56,7 @@ export default function UserLayout() {
                 onClick={() => navigate(item.path)}
                 className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
                   isActive(item.path)
-                    ? 'bg-yellow-400 text-white'
+                    ? 'bg-[#0A192F] text-white'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -70,7 +68,6 @@ export default function UserLayout() {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <NotificationBell />
-           
 
             <button
               onClick={() => navigate('/profile')}
@@ -81,12 +78,11 @@ export default function UserLayout() {
 
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-white hover:bg-yellow-500"
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#0A192F] px-4 py-3 text-sm font-semibold text-white hover:bg-[#081425]"
             >
               <LogOut size={18} />
               Logout
             </button>
-
           </div>
         </div>
 
@@ -99,7 +95,7 @@ export default function UserLayout() {
                 onClick={() => navigate(item.path)}
                 className={`rounded-xl border px-4 py-2 text-sm ${
                   isActive(item.path)
-                    ? 'border-yellow-400 bg-yellow-400 text-white'
+                    ? 'border-[#0A192F] bg-[#0A192F] text-white'
                     : 'border-gray-200 bg-white text-gray-700'
                 }`}
               >
@@ -108,9 +104,7 @@ export default function UserLayout() {
             ))}
           </div>
         </div>
-
       </header>
-
     </div>
   )
 }
