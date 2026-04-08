@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.example.campus_hub_backend.enumtype.NotificationType;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,7 @@ public class IncidentTicketService {
 
     private final IncidentTicketRepository ticketRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // Create a new ticket
     public TicketResponseDTO createTicket(TicketRequestDTO request, String userEmail) {
@@ -38,6 +40,15 @@ public class IncidentTicketService {
         ticket.setCreatedBy(user);
 
         IncidentTicket saved = ticketRepository.save(ticket);
+
+            notificationService.createNotification(
+            user,
+            NotificationType.TICKET_STATUS_CHANGED,
+            "Ticket created",
+            "Your ticket \"" + saved.getTitle() + "\" was created successfully.",
+            "TICKET",
+            saved.getId()
+    );
         return mapToResponseDTO(saved);
     }
 
@@ -118,6 +129,16 @@ public class IncidentTicketService {
         }
 
         IncidentTicket saved = ticketRepository.save(ticket);
+
+            notificationService.createNotification(
+            saved.getCreatedBy(),
+            NotificationType.TICKET_STATUS_CHANGED,
+            "Ticket status updated",
+            "Your ticket \"" + saved.getTitle() + "\" is now " + saved.getStatus() + ".",
+            "TICKET",
+            saved.getId()
+    );
+
         return mapToResponseDTO(saved);
     }
 
@@ -133,6 +154,25 @@ public class IncidentTicketService {
         ticket.setStatus(TicketStatus.IN_PROGRESS);
 
         IncidentTicket saved = ticketRepository.save(ticket);
+
+        notificationService.createNotification(
+            saved.getCreatedBy(),
+            NotificationType.TICKET_ASSIGNED,
+            "Technician assigned",
+            "A technician has been assigned to your ticket \"" + saved.getTitle() + "\".",
+            "TICKET",
+            saved.getId()
+    );
+
+    notificationService.createNotification(
+            technician,
+            NotificationType.TICKET_ASSIGNED,
+            "New assigned ticket",
+            "You have been assigned to ticket \"" + saved.getTitle() + "\".",
+            "TICKET",
+            saved.getId()
+    );
+
         return mapToResponseDTO(saved);
     }
 

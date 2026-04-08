@@ -19,6 +19,7 @@ function TicketList() {
 
   const isAdmin = currentUser?.role === 'ROLE_ADMIN' || currentUser?.role === 'ADMIN'
   const isTechnician = currentUser?.role === 'ROLE_TECHNICIAN' || currentUser?.role === 'TECHNICIAN'
+  const isUser = currentUser?.role === 'USER' || currentUser?.role === 'ROLE_USER'
 
   useEffect(() => {
     if (currentUser) {
@@ -58,13 +59,13 @@ function TicketList() {
   if (loading) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Loading tickets...
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
@@ -72,20 +73,20 @@ function TicketList() {
   if (error) {
     return (
       <>
-        <Header />
+        {isUser && <Header />}
         <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Error: {error}
           </div>
         </section>
-        <Footer />
+        {isUser && <Footer />}
       </>
     )
   }
 
   return (
     <>
-      <Header />
+      {isUser && <Header />}
       <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Page title row */}
@@ -188,7 +189,7 @@ function TicketList() {
       )}
         </div>
       </section>
-      <Footer />
+      {isUser && <Footer />}
     </>
   )
 }

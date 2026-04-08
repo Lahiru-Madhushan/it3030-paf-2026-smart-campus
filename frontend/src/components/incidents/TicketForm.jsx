@@ -6,8 +6,9 @@ import Header from '../dashboard/UserDashboard'
 import Footer from '../dashboard/userFooter'
 
 function TicketForm() {
-  const { auth } = useAuth()
+  const { auth, currentUser } = useAuth()
   const token = auth?.token
+  const isUser = currentUser?.role === 'USER' || currentUser?.role === 'ROLE_USER'
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -79,7 +80,7 @@ function TicketForm() {
 
   return (
     <>
-      <Header />
+      {isUser && <Header />}
       <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
           <div className="mx-auto w-full max-w-2xl">
@@ -242,7 +243,7 @@ function TicketForm() {
           </div>
         </div>
       </section>
-      <Footer />
+      {isUser && <Footer />}
     </>
   )
 }
