@@ -1,6 +1,7 @@
 package com.example.campus_hub_backend.controller;
 
 import com.example.campus_hub_backend.dto.ResourceCreateRequest;
+import com.example.campus_hub_backend.dto.ResourceIssueReportRequest;
 import com.example.campus_hub_backend.dto.ResourceResponse;
 import com.example.campus_hub_backend.dto.ResourceStatusUpdateRequest;
 import com.example.campus_hub_backend.dto.ResourceUpdateRequest;
@@ -73,6 +74,14 @@ public class ResourceController {
             @Valid @RequestBody ResourceStatusUpdateRequest request
     ) {
         return ResponseEntity.ok(resourceService.updateStatus(id, request));
+    }
+
+    @PostMapping("/{id}/issues")
+    public ResponseEntity<ResourceResponse> reportIssue(
+            @PathVariable Long id,
+            @Valid @RequestBody ResourceIssueReportRequest request
+    ) {
+        return ResponseEntity.ok(resourceService.reportIssue(id, request));
     }
 
     @DeleteMapping("/{id}")
