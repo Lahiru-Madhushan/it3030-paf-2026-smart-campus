@@ -287,7 +287,8 @@ function TicketDetail() {
               {ticket.attachmentPaths.map((path, i) => (
                 <img
                   key={i}
-                  src={`http://localhost:8088/${path}`}
+                  // Encode to handle filenames with spaces/special characters.
+                  src={`http://localhost:8088/${encodeURI(path)}`}
                   alt={`attachment-${i}`}
                   style={{ width: '100px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }}
                 />
