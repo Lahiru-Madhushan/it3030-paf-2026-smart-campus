@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { authService } from '../../services/authService'
 import { API_BASE_URL } from '../../utils/constants'
+import frontImage from '../../assets/front.jpg'
+import logo1 from '../../assets/logo1.png'
 
 const initialForm = {
   name: '',
@@ -69,22 +71,24 @@ export default function RegisterPage() {
         <div
           className="relative hidden overflow-hidden lg:col-span-3 lg:flex lg:items-center lg:justify-center"
           style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=2070')",
+            backgroundImage: `url(${frontImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
           }}
         >
           <div className="absolute inset-0 bg-black/45" />
 
           <div className="relative z-10 px-10 text-center text-white">
-            <div className="mb-6 flex items-center justify-center gap-3">
-              <div className="rounded-2xl bg-yellow-400 px-4 py-2 font-bold text-white shadow">
-                CH
-              </div>
+            <div className="mb-6 flex items-center justify-center gap-4">
+              <img
+                src={logo1}
+                alt="Campus Hub Logo"
+                className="h-20 w-20 object-contain drop-shadow-xl"
+              />
 
               <div className="text-left">
-                <h1 className="text-2xl font-bold">Campus Hub</h1>
+                <h1 className="text-3xl font-bold">Campus Hub</h1>
                 <p className="text-sm text-gray-200">
                   Smart campus management system
                 </p>
@@ -98,8 +102,8 @@ export default function RegisterPage() {
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="flex items-center justify-center px-6 py-10 lg:col-span-2">
-          <div className="w-full max-w-md rounded-[2rem] border border-white/60 bg-white/85 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="lg:col-span-2 flex items-center justify-center p-0">
+          <div className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-2xl">
             <div className="mb-8">
               <Link
                 to="/"
@@ -174,7 +178,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-2xl bg-yellow-400 px-4 py-3 font-semibold text-white transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full rounded-2xl bg-[#0A192F] px-4 py-3 font-semibold text-white transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? 'Sending OTP...' : 'Send OTP'}
                 </button>
@@ -233,7 +237,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-2xl bg-yellow-400 px-4 py-3 font-semibold text-white transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full rounded-2xl bg-[#0A192F] px-4 py-3 font-semibold text-white transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? 'Verifying...' : 'Verify & Complete'}
                 </button>
