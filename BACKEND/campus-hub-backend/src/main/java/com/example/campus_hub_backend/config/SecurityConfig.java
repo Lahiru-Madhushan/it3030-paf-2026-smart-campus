@@ -59,6 +59,11 @@ public class SecurityConfig {
                                 "/login/**",
                                 "/api/chat"
                         ).permitAll()
+                        // Ticket attachments are loaded via <img src="http://localhost:8088/uploads/...">
+                        // Browsers do not automatically attach the JWT Authorization header for image requests.
+                        .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/*/attachments").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/*/attachments/**").permitAll()
                         // Admin user management
                         .requestMatchers(HttpMethod.POST, "/api/resources/*/issues").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
