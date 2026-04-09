@@ -94,6 +94,13 @@ public class BookingService {
         booking.setExpectedAttendees(request.getExpectedAttendees());
 
         Booking saved = bookingRepository.save(booking);
+
+        sendBookingNotificationSafely(
+                saved,
+                NotificationType.BOOKING_CREATED,
+                "Booking request submitted",
+                "Your booking request for resource \"" + getResourceLabel(saved) + "\" was created.");
+
         return toResponse(saved);
     }
 
@@ -284,7 +291,15 @@ public class BookingService {
         booking.setApprovedAt(null);
         booking.setRejectionReason(null);
 
-        return toResponse(bookingRepository.save(booking));
+        Booking saved = bookingRepository.save(booking);
+
+        sendBookingNotificationSafely(
+                saved,
+                NotificationType.BOOKING_UPDATED,
+                "Booking rescheduled",
+                "Your booking for resource \"" + getResourceLabel(saved) + "\" was rescheduled and is pending approval.");
+
+        return toResponse(saved);
     }
 
     // ─── Delete ───────────────────────────────────────────────
