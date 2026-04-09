@@ -121,7 +121,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Resource ID</label>
               <input
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 type="number"
                 name="resourceId"
                 value={formData.resourceId}
@@ -133,7 +133,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Booking Date</label>
               <input
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 type="date"
                 name="bookingDate"
                 value={formData.bookingDate}
@@ -145,7 +145,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">Start Time</label>
               <input
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 type="time"
                 name="startTime"
                 value={formData.startTime}
@@ -156,7 +156,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div>
               <label className="mb-1 block text-sm font-semibold text-gray-700">End Time</label>
               <input
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 type="time"
                 name="endTime"
                 value={formData.endTime}
@@ -167,7 +167,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-semibold text-gray-700">Purpose</label>
               <textarea
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 rows="3"
                 name="purpose"
                 value={formData.purpose}
@@ -178,7 +178,7 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
             <div className="sm:col-span-2">
               <label className="mb-1 block text-sm font-semibold text-gray-700">Expected Attendees</label>
               <input
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
                 type="number"
                 name="expectedAttendees"
                 value={formData.expectedAttendees}
@@ -190,14 +190,14 @@ function RescheduleBookingModal({ open, booking, loading, onClose, onConfirm }) 
 
           <div className="flex justify-end gap-3 pt-2">
             <button
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              className="rounded-2xl border border-[#0A192F] bg-white px-4 py-2 text-sm font-semibold text-[#0A192F] transition hover:bg-[#e8edf5]"
               type="button"
               onClick={handleClose}
             >
               Close
             </button>
             <button
-              className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-bold text-white hover:bg-yellow-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-[#0A192F] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-60"
               type="submit"
               disabled={loading}
             >

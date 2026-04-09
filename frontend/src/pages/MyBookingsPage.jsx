@@ -83,7 +83,7 @@ function MyBookingsPage() {
     <>
       <Header />
       <Toaster position="top-right" />
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
         <section className="mx-auto max-w-7xl space-y-6">
           <div className="space-y-2">
             <h1 className="text-4xl font-bold text-gray-900">My Bookings</h1>

@@ -41,7 +41,7 @@ function BookingFormPage() {
     <>
       <Header />
       <Toaster position="top-right" />
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
         <section className="mx-auto max-w-2xl space-y-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
@@ -62,7 +62,7 @@ function BookingFormPage() {
           </div>
 
           {prefilledResourceId ? (
-            <div className="rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
               Booking for resource ID {prefilledResourceId}
               {resourceCodeParam ? ` (${resourceCodeParam})` : ''}.
             </div>

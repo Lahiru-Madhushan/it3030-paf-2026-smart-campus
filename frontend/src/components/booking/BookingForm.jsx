@@ -98,7 +98,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
 
   return (
     <form
-      className="space-y-5 rounded-2xl border border-white/60 bg-white/85 p-8 shadow-2xl backdrop-blur-xl"
+      className="space-y-5 rounded-3xl border border-slate-200 bg-white p-8 shadow-lg"
       onSubmit={handleSubmit}
     >
       <h2 className="text-2xl font-bold text-gray-900">Create Booking Request</h2>
@@ -114,7 +114,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           Resource ID
         </label>
         <input
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm placeholder-gray-400 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm placeholder-gray-400 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           type="number"
           name="resourceId"
           value={formData.resourceId}
@@ -129,7 +129,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           Booking Date
         </label>
         <input
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           type="date"
           name="bookingDate"
           value={formData.bookingDate}
@@ -143,7 +143,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           Start Time
         </label>
         <input
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           type="time"
           name="startTime"
           value={formData.startTime}
@@ -156,7 +156,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           End Time
         </label>
         <input
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           type="time"
           name="endTime"
           value={formData.endTime}
@@ -169,7 +169,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           Purpose
         </label>
         <textarea
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm placeholder-gray-400 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm placeholder-gray-400 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           name="purpose"
           value={formData.purpose}
           onChange={handleChange}
@@ -183,7 +183,7 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
           Expected Attendees
         </label>
         <input
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm placeholder-gray-400 focus:border-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm placeholder-gray-400 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
           type="number"
           name="expectedAttendees"
           value={formData.expectedAttendees}
@@ -194,11 +194,11 @@ function BookingForm({ onSubmit, loading, initialResourceId = null }) {
       </div>
 
       <button
-        className="mt-2 w-full rounded-lg bg-gradient-to-r from-yellow-400 to-yellow-500 px-4 py-3 text-sm font-bold text-white shadow-lg hover:from-yellow-500 hover:to-yellow-600 disabled:cursor-not-allowed disabled:opacity-60 transition-all"
+        className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#0A192F] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-60"
         type="submit"
         disabled={loading}
       >
-        {loading ? '⏳ Submitting...' : '✓ Submit Booking'}
+        {loading ? 'Submitting...' : 'Submit Booking'}
       </button>
     </form>
   )
