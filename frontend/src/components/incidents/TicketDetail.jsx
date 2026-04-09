@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ticketService } from '../../services/ticketService'
 import { useAuth } from '../../context/AuthContext'
+import SLATimer from './SLATimer'
+import Header from '../dashboard/UserDashboard'
+import Footer from '../dashboard/userFooter'
 
 const statusColors = {
   OPEN: { bg: '#E6F1FB', text: '#0C447C', border: '#185FA5' },
@@ -31,6 +34,7 @@ function TicketDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [newComment, setNewComment] = useState('')
+  const [newResolutionNote, setNewResolutionNote] = useState('')
   const [editingComment, setEditingComment] = useState(null)
   const [editContent, setEditContent] = useState('')
   const [technicianEmail, setTechnicianEmail] = useState('')
@@ -40,11 +44,14 @@ function TicketDetail() {
 
   const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN'
   const isTechnician = user?.role === 'ROLE_TECHNICIAN' || user?.role === 'TECHNICIAN'
+  const isUser = user?.role === 'USER' || user?.role === 'ROLE_USER'
 
   useEffect(() => {
-    fetchTicket()
-    fetchComments()
-  }, [id])
+    if (token) {
+      fetchTicket()
+      fetchComments()
+    }
+  }, [id, token])
 
   const fetchTicket = async () => {
     try {
@@ -60,8 +67,9 @@ function TicketDetail() {
   const fetchComments = async () => {
     try {
       const data = await ticketService.getComments(token, id)
-      setComments(data)
+      setComments(data || [])
     } catch (err) {
+      setComments([])
       console.error(err)
     }
   }
@@ -98,8 +106,25 @@ function TicketDetail() {
   const handleAddComment = async () => {
     if (!newComment.trim()) return
     try {
-      await ticketService.addComment(token, id, { content: newComment })
+      await ticketService.addComment(token, id, {
+        content: newComment,
+        resolutionNote: false
+      })
       setNewComment('')
+      await fetchComments()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleAddResolutionNote = async () => {
+    if (!newResolutionNote.trim()) return
+    try {
+      await ticketService.addComment(token, id, {
+        content: newResolutionNote,
+        resolutionNote: true
+      })
+      setNewResolutionNote('')
       await fetchComments()
     } catch (err) {
       setError(err.message)
@@ -147,22 +172,76 @@ function TicketDetail() {
     return `${hours}h`
   }
 
-  if (loading) return <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>Loading ticket...</div>
-  if (error) return <div style={{ textAlign: 'center', padding: '60px', color: '#A32D2D' }}>Error: {error}</div>
-  if (!ticket) return null
+  if (!token) {
+    return (
+      <>
+        {isUser && <Header />}
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
+            Please login to view this ticket.
+          </div>
+        </section>
+        {isUser && <Footer />}
+      </>
+    )
+  }
+
+  if (loading) {
+    return (
+      <>
+        {isUser && <Header />}
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
+            Loading ticket...
+          </div>
+        </section>
+        {isUser && <Footer />}
+      </>
+    )
+  }
+
+  if (error) {
+    return (
+      <>
+        {isUser && <Header />}
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
+            Error: {error}
+          </div>
+        </section>
+        {isUser && <Footer />}
+      </>
+    )
+  }
+
+  if (!ticket) {
+    return (
+      <>
+        {isUser && <Header />}
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+          <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
+            Ticket not found or you don&apos;t have permission to view it.
+          </div>
+        </section>
+        {isUser && <Footer />}
+      </>
+    )
+  }
 
   const status = statusColors[ticket.status] || statusColors.OPEN
   const nextStatuses = validTransitions[ticket.status] || []
 
   return (
-    <div style={{ maxWidth: '860px', margin: '0 auto', padding: '24px' }}>
-
+    <>
+      {isUser && <Header />}
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Back button */}
       <button
-        onClick={() => navigate('/incidents')}
+        onClick={() => navigate(-1)}
         style={{ background: 'none', border: 'none', color: '#185FA5', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}
       >
-        ← Back to tickets
+        ← Back
       </button>
 
       {/* Ticket header */}
@@ -176,7 +255,6 @@ function TicketDetail() {
           </span>
         </div>
 
-        {/* Meta info */}
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '16px', fontSize: '13px', color: '#666' }}>
           <span>📍 {ticket.location}</span>
           <span>🏷 {ticket.category}</span>
@@ -202,7 +280,6 @@ function TicketDetail() {
           </div>
         )}
 
-        {/* Attachments */}
         {ticket.attachmentPaths && ticket.attachmentPaths.length > 0 && (
           <div style={{ marginTop: '16px' }}>
             <p style={{ margin: '0 0 8px', fontWeight: '600', fontSize: '14px' }}>Attachments</p>
@@ -210,7 +287,8 @@ function TicketDetail() {
               {ticket.attachmentPaths.map((path, i) => (
                 <img
                   key={i}
-                  src={`http://localhost:8088/${path}`}
+                  // Encode to handle filenames with spaces/special characters.
+                  src={`http://localhost:8088/${encodeURI(path)}`}
                   alt={`attachment-${i}`}
                   style={{ width: '100px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #ddd' }}
                 />
@@ -219,7 +297,6 @@ function TicketDetail() {
           </div>
         )}
 
-        {/* Admin delete button */}
         {isAdmin && (
           <div style={{ marginTop: '16px', textAlign: 'right' }}>
             <button
@@ -232,11 +309,15 @@ function TicketDetail() {
         )}
       </div>
 
-      {/* Admin / Technician controls */}
+      {/* SLA Timer */}
+      {(isAdmin || isTechnician) && (
+        <SLATimer ticket={ticket} />
+      )}
+
+      {/* Admin / Technician status controls */}
       {(isAdmin || isTechnician) && nextStatuses.length > 0 && (
         <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
           <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: '600' }}>Update Status</h3>
-
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
             {nextStatuses.map(s => (
               <button
@@ -265,6 +346,16 @@ function TicketDetail() {
               value={rejectionReason}
               onChange={e => setRejectionReason(e.target.value)}
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box' }}
+            />
+          )}
+
+          {selectedStatus === 'RESOLVED' && (
+            <textarea
+              placeholder="Add resolution notes — what did you fix and how?"
+              value={rejectionReason}
+              onChange={e => setRejectionReason(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #0F6E56', fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box' }}
             />
           )}
 
@@ -301,26 +392,67 @@ function TicketDetail() {
         </div>
       )}
 
+      {/* Resolution Note section — Technician only */}
+      {isTechnician && (
+        <div style={{ background: '#E1F5EE', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '16px', border: '1px solid #0F6E56' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '16px', fontWeight: '600', color: '#085041' }}>
+            📋 Add Resolution Note
+          </h3>
+          <p style={{ margin: '0 0 12px', fontSize: '13px', color: '#085041' }}>
+            Explain how you fixed the issue — parts used, actions taken, time spent etc.
+          </p>
+          <textarea
+            value={newResolutionNote}
+            onChange={e => setNewResolutionNote(e.target.value)}
+            placeholder="Describe the resolution — what was the problem and how did you fix it?"
+            rows={4}
+            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #0F6E56', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical', background: '#fff' }}
+          />
+          <button
+            onClick={handleAddResolutionNote}
+            disabled={!newResolutionNote.trim()}
+            style={{ marginTop: '8px', background: newResolutionNote.trim() ? '#0F6E56' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newResolutionNote.trim() ? 'pointer' : 'not-allowed' }}
+          >
+            Save Resolution Note
+          </button>
+        </div>
+      )}
+
       {/* Comments section */}
       <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
         <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: '600' }}>
           Comments ({comments.length})
         </h3>
 
-        {/* Comment list */}
-        {comments.length === 0 ? (
+        {!comments || comments.length === 0 ? (
           <p style={{ color: '#888', fontSize: '14px', marginBottom: '16px' }}>No comments yet</p>
         ) : (
-          comments.map(comment => (
-            <div key={comment.id} style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '12px', marginBottom: '12px' }}>
+          (comments || []).map(comment => (
+            <div
+              key={comment.id}
+              style={{
+                marginBottom: '12px',
+                padding: '12px',
+                borderRadius: '8px',
+                background: comment.resolutionNote ? '#E1F5EE' : '#f9f9f9',
+                border: comment.resolutionNote ? '1px solid #0F6E56' : '1px solid #f0f0f0',
+              }}
+            >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
-                  <span style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>
-                    {comment.createdBy?.name || 'Unknown'}
-                  </span>
-                  <span style={{ fontSize: '12px', color: '#999', marginLeft: '8px' }}>
-                    {new Date(comment.createdAt).toLocaleString()}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                    <span style={{ fontWeight: '600', fontSize: '13px', color: '#333' }}>
+                      {comment.createdByName || 'Unknown'}
+                    </span>
+                    {comment.resolutionNote && (
+                      <span style={{ background: '#085041', color: '#fff', fontSize: '11px', padding: '2px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                        ✅ Resolution Note
+                      </span>
+                    )}
+                    <span style={{ fontSize: '12px', color: '#999' }}>
+                      {new Date(comment.createdAt).toLocaleString()}
+                    </span>
+                  </div>
 
                   {editingComment === comment.id ? (
                     <div style={{ marginTop: '8px' }}>
@@ -331,19 +463,29 @@ function TicketDetail() {
                         style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
                       />
                       <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                        <button onClick={() => handleEditComment(comment.id)} style={{ background: '#185FA5', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}>Save</button>
-                        <button onClick={() => setEditingComment(null)} style={{ background: '#f0f0f0', color: '#333', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                        <button
+                          onClick={() => handleEditComment(comment.id)}
+                          style={{ background: '#185FA5', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingComment(null)}
+                          style={{ background: '#f0f0f0', color: '#333', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}
+                        >
+                          Cancel
+                        </button>
                       </div>
                     </div>
                   ) : (
-                    <p style={{ margin: '6px 0 0', fontSize: '14px', color: '#333', lineHeight: '1.5' }}>
+                    <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#333', lineHeight: '1.5' }}>
                       {comment.content}
                     </p>
                   )}
                 </div>
 
-                {/* Edit/Delete buttons — only for comment owner */}
-                {comment.createdBy?.email === user?.email && editingComment !== comment.id && (
+                {/* Edit/Delete — only for comment owner */}
+                {comment.createdByEmail === user?.email && editingComment !== comment.id && (
                   <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
                     <button
                       onClick={() => { setEditingComment(comment.id); setEditContent(comment.content) }}
@@ -364,25 +506,50 @@ function TicketDetail() {
           ))
         )}
 
-        {/* Add comment */}
-        <div style={{ marginTop: '16px' }}>
-          <textarea
-            value={newComment}
-            onChange={e => setNewComment(e.target.value)}
-            placeholder="Write a comment..."
-            rows={3}
-            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical' }}
-          />
-          <button
-            onClick={handleAddComment}
-            disabled={!newComment.trim()}
-            style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
-          >
-            Add Comment
-          </button>
-        </div>
+        {/* Regular comment box — for USER and ADMIN */}
+        {!isTechnician && (
+          <div style={{ marginTop: '16px' }}>
+            <textarea
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="Write a comment..."
+              rows={3}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical' }}
+            />
+            <button
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#facc15', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
+            >
+              Add Comment
+            </button>
+          </div>
+        )}
+
+        {/* Technician regular comment box */}
+        {isTechnician && (
+          <div style={{ marginTop: '16px' }}>
+            <textarea
+              value={newComment}
+              onChange={e => setNewComment(e.target.value)}
+              placeholder="Write a regular comment..."
+              rows={3}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical' }}
+            />
+            <button
+              onClick={handleAddComment}
+              disabled={!newComment.trim()}
+              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
+            >
+              Add Comment
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+        </div>
+      </section>
+      {isUser && <Footer />}
+    </>
   )
 }
 

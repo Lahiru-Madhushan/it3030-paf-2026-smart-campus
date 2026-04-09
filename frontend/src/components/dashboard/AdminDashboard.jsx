@@ -10,6 +10,7 @@ import {
   X,
   Home,
   ChevronRight,
+  Ticket,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import AdminChatBot  from '../AdditionalPages/Adminchatbot'
@@ -25,6 +26,7 @@ export default function AdminLayout() {
     { id: 'users', label: 'Users', icon: <Users size={18} />, path: '/dashboard/admin/users' },
     { id: 'resources', label: 'Resources', icon: <Boxes size={18} />, path: '/dashboard/admin/resources' },
     { id: 'bookings', label: 'Bookings', icon: <CalendarDays size={18} />, path: '/dashboard/admin/bookings' },
+    { id: 'tickets', label: 'Tickets', icon: <Ticket size={18} />, path: '/dashboard/admin/incidents' },
   ]
 
   const handleLogout = () => {
@@ -55,6 +57,8 @@ export default function AdminLayout() {
         return 'Resource Management'
       case '/dashboard/admin/bookings':
         return 'Booking Management'
+      case '/dashboard/admin/incidents':
+        return 'Incident Tickets'
       default:
         return 'Admin Overview'
     }
@@ -68,6 +72,8 @@ export default function AdminLayout() {
         return 'Resources'
       case '/dashboard/admin/bookings':
         return 'Bookings'
+      case '/dashboard/admin/incidents':
+        return 'Tickets'
       default:
         return 'Admin Overview'
     }
@@ -81,6 +87,8 @@ export default function AdminLayout() {
         return 'View and manage campus resources.'
       case '/dashboard/admin/bookings':
         return 'View and manage all booking records.'
+      case '/dashboard/admin/incidents':
+        return 'View and manage all incident tickets and maintenance requests.'
       default:
         return 'Select a module from the sidebar to manage your campus platform.'
     }
@@ -107,7 +115,6 @@ export default function AdminLayout() {
               CampusHub
             </span>
           )}
-
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="ml-auto rounded-lg p-1.5 text-white/60 transition hover:bg-white/10 hover:text-white"
@@ -119,7 +126,6 @@ export default function AdminLayout() {
         <nav className="flex flex-1 flex-col gap-1 p-3">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path
-
             return (
               <button
                 key={item.id}

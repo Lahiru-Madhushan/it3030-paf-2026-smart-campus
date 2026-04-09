@@ -1,10 +1,12 @@
 package com.example.campus_hub_backend.service;
 
 import com.example.campus_hub_backend.dto.ResourceCreateRequest;
+import com.example.campus_hub_backend.dto.ResourceIssueReportRequest;
 import com.example.campus_hub_backend.dto.ResourceResponse;
 import com.example.campus_hub_backend.dto.ResourceStatusUpdateRequest;
 import com.example.campus_hub_backend.dto.ResourceUpdateRequest;
 import com.example.campus_hub_backend.entity.Resource;
+import com.example.campus_hub_backend.enumtype.IssueStatus;
 import com.example.campus_hub_backend.enumtype.ResourceCondition;
 import com.example.campus_hub_backend.enumtype.ResourceStatus;
 import com.example.campus_hub_backend.enumtype.ResourceType;
@@ -27,6 +29,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -176,6 +179,29 @@ public class ResourceServiceImpl implements ResourceService {
     public ResourceResponse updateStatus(Long id, ResourceStatusUpdateRequest request) {
         Resource resource = getResourceEntity(id);
         resource.setStatus(request.getStatus());
+        return mapToResponse(resourceRepository.save(resource));
+    }
+
+    @Override
+    public ResourceResponse reportIssue(Long id, ResourceIssueReportRequest request) {
+        Resource resource = getResourceEntity(id);
+        List<AssetIssue> issues = safeIssueList(resource.getIssues());
+
+        issues.add(AssetIssue.builder()
+                .id("ISS-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .text(request.getText().trim())
+                .severity(request.getSeverity())
+                .date(LocalDate.now())
+                .status(IssueStatus.OPEN)
+                .build());
+
+        resource.setIssues(issues);
+        resource.setCondition(ResourceCondition.REPAIR_NEEDED);
+
+        if (resource.getStatus() == ResourceStatus.ACTIVE && Boolean.FALSE.equals(resource.getBorrowed())) {
+            resource.setStatus(ResourceStatus.UNDER_MAINTENANCE);
+        }
+
         return mapToResponse(resourceRepository.save(resource));
     }
 

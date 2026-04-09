@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { Toaster, toast } from 'react-hot-toast'
 import bookingsApi from '../api/bookingsApi'
 import Header from '../components/dashboard/UserDashboard'
+import Footer from '../components/dashboard/userFooter'
 import { getBookingErrorMessage } from '../utils/bookingErrorMessages'
 
 function BookingFormPage() {
@@ -74,6 +75,7 @@ function BookingFormPage() {
           />
         </section>
       </div>
+      <Footer />
     </>
   )
 }

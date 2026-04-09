@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
 import { authRequest } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
@@ -17,6 +18,7 @@ const PAGE_ITEMS = [
 const TYPE_OPTIONS = ['LECTURE_HALL', 'MEETING_ROOM', 'ROOM', 'LAB', 'EQUIPMENT']
 const STATUS_OPTIONS = ['ACTIVE', 'OUT_OF_SERVICE', 'UNDER_MAINTENANCE', 'INACTIVE', 'AVAILABLE']
 const CONDITION_OPTIONS = ['GOOD', 'REPAIR_NEEDED']
+const FEATURE_OPTIONS = ['Projects', 'Camera']
 
 const TYPE_META = {
   LECTURE_HALL: { label: 'Lecture Hall', icon: 'LH', tone: 'facilities-type--blue' },
@@ -39,32 +41,19 @@ const CONDITION_LABELS = {
   REPAIR_NEEDED: 'Repair needed',
 }
 
-const EMPTY_FORM = {
-  resourceCode: '',
-  name: '',
-  resourceType: 'EQUIPMENT',
-  category: '',
-  capacity: '0',
-  building: '',
-  floorNumber: '',
-  roomNumber: '',
-  locationText: '',
-  availableFrom: '08:00',
-  availableTo: '17:00',
-  status: 'ACTIVE',
-  condition: 'GOOD',
-  borrowed: false,
-  rating: '0',
-  lastServiceDate: '',
-  nextServiceDate: '',
-  totalBookings: '0',
-  bookingsToday: '0',
-  amenities: '',
-  monthlyBookings: '0,0,0,0,0,0,0,0,0,0,0,0',
-  description: '',
-  imageUrl: '',
-  requiresApproval: false,
-  isActive: true,
+const IMAGE_LIBRARY = {
+  labGeneral: 'https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=900&q=80',
+  labProject: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=900&q=80',
+  labCamera: makeInlineAssetImage('Camera Lab', '#f59e0b'),
+  labRobotics: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&q=80',
+  hallStandard: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=900&q=80',
+  hallCamera: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=900&q=80',
+  meeting: 'https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=900&q=80',
+  projector: 'https://images.unsplash.com/photo-1622979135225-d2ba269cf1ac?w=900&q=80',
+  cameraSony: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=900&q=80',
+  cameraCanon: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=900&q=80',
+  drone: 'https://images.unsplash.com/photo-1473968512647-3e447244af8f?w=900&q=80',
+  laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&q=80',
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -79,6 +68,7 @@ export default function FacilitiesWorkspace() {
   const [error, setError] = useState('')
   const [page, setPage] = useState('dashboard')
   const [search, setSearch] = useState('')
+  const [qrSearch, setQrSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState('ALL')
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [selectedAsset, setSelectedAsset] = useState(null)
@@ -86,6 +76,7 @@ export default function FacilitiesWorkspace() {
   const [issueDraft, setIssueDraft] = useState({ assetId: '', text: '', severity: 'MEDIUM' })
   const [toast, setToast] = useState(null)
   const [readNotifications, setReadNotifications] = useState([])
+  const [qrCodeUrl, setQrCodeUrl] = useState('')
 
   useEffect(() => {
     if (!token) return
@@ -141,6 +132,17 @@ export default function FacilitiesWorkspace() {
       return matchesType && matchesStatus && matchesSearch
     })
   }, [assets, search, typeFilter, statusFilter])
+
+  const qrAssets = useMemo(() => {
+    const query = qrSearch.trim().toLowerCase()
+    if (!query) return assets
+
+    return assets.filter((asset) =>
+      [asset.resourceCode, asset.name, asset.category, asset.locationText, asset.description]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query)),
+    )
+  }, [assets, qrSearch])
 
   const issueRows = useMemo(
     () =>
@@ -245,33 +247,43 @@ export default function FacilitiesWorkspace() {
   }
 
   async function reportIssue() {
-    if (!issueDraft.assetId || !issueDraft.text.trim()) {
+    const trimmedText = issueDraft.text.trim()
+
+    if (!issueDraft.assetId || !trimmedText) {
       setToast({ tone: 'danger', message: 'Choose an asset and describe the issue first.' })
       return
     }
 
-    const asset = assets.find((item) => String(item.id) === issueDraft.assetId)
-    if (!asset) return
+    if (!token) {
+      setToast({ tone: 'danger', message: 'Please sign in again to report an issue.' })
+      return
+    }
 
-    await patchAsset(
-      asset,
-      {
-        issues: [
-          ...asset.issues,
-          {
-            id: `ISS-${Date.now()}`,
-            text: issueDraft.text.trim(),
+    try {
+      const updatedAsset = normalizeAsset(
+        await authRequest(`/api/resources/${issueDraft.assetId}/issues`, token, {
+          method: 'POST',
+          body: JSON.stringify({
+            text: trimmedText,
             severity: issueDraft.severity,
-            status: 'OPEN',
-            date: new Date().toISOString().slice(0, 10),
-          },
-        ],
-        condition: 'REPAIR_NEEDED',
-      },
-      'Issue report sent to maintenance.',
-    )
+          }),
+        }),
+      )
 
-    setIssueDraft({ assetId: issueDraft.assetId, text: '', severity: 'MEDIUM' })
+      setAssets((current) =>
+        current
+          .map((asset) => (asset.id === updatedAsset.id ? updatedAsset : asset))
+          .sort((left, right) => left.name.localeCompare(right.name)),
+      )
+      setSelectedAsset((current) => (current?.id === updatedAsset.id ? updatedAsset : current))
+      setIssueDraft({ assetId: String(updatedAsset.id), text: '', severity: 'MEDIUM' })
+      setToast({
+        tone: 'success',
+        message: isAdmin ? 'Issue report added to the asset log.' : 'Issue report sent to the facilities team.',
+      })
+    } catch (reportError) {
+      setToast({ tone: 'danger', message: reportError.message })
+    }
   }
 
   async function resolveIssue(issueRow) {
@@ -302,7 +314,8 @@ export default function FacilitiesWorkspace() {
     )
   }
 
-  const selectedQrAsset = assets.find((asset) => String(asset.id) === issueDraft.assetId) || assets[0]
+  const selectedQrAsset =
+    qrAssets.find((asset) => String(asset.id) === issueDraft.assetId) || qrAssets[0] || assets[0]
   const availableNow = assets.filter((asset) => asset.status === 'ACTIVE' && !asset.borrowed).length
   const borrowedCount = assets.filter((asset) => asset.borrowed).length
   const openIssueCount = issueRows.filter((issue) => issue.status !== 'RESOLVED').length
@@ -312,6 +325,38 @@ export default function FacilitiesWorkspace() {
     value: assets.reduce((sum, asset) => sum + (asset.monthlyBookings[index] || 0), 0),
   }))
   const maxMonthly = Math.max(...monthlyTotals.map((entry) => entry.value), 1)
+
+  useEffect(() => {
+    let active = true
+
+    if (!selectedQrAsset) {
+      setQrCodeUrl('')
+      return undefined
+    }
+
+    QRCode.toDataURL(buildQrPayload(selectedQrAsset), {
+      width: 360,
+      margin: 1,
+      color: {
+        dark: '#0f172a',
+        light: '#f8fbff',
+      },
+    })
+      .then((url) => {
+        if (active) {
+          setQrCodeUrl(url)
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setQrCodeUrl('')
+        }
+      })
+
+    return () => {
+      active = false
+    }
+  }, [selectedQrAsset])
 
   return (
     <div className="facilities-workspace">
@@ -328,7 +373,7 @@ export default function FacilitiesWorkspace() {
             <button
               type="button"
               className="facilities-button"
-              onClick={() => setEditorState({ original: null, values: EMPTY_FORM })}
+              onClick={() => setEditorState({ original: null, values: buildEmptyForm(assets) })}
             >
               Add asset
             </button>
@@ -456,6 +501,13 @@ export default function FacilitiesWorkspace() {
           <div className="facilities-grid">
             {filteredAssets.map((asset) => (
               <article key={asset.id} className="facilities-card facilities-asset">
+                <div className="facilities-asset__media">
+                  <img src={asset.displayImageUrl} alt={asset.name} className="facilities-asset__image" />
+                  <div className="facilities-asset__overlay">
+                    <span className="facilities-tag">{asset.resourceCode}</span>
+                    <span className="facilities-tag">{TYPE_META[asset.resourceType]?.label || asset.resourceType}</span>
+                  </div>
+                </div>
                 <div className="facilities-asset__head">
                   <TypeBadge type={asset.resourceType} />
                   <span
@@ -531,76 +583,164 @@ export default function FacilitiesWorkspace() {
       ) : null}
 
       {!loading && page === 'qr' ? (
-        <section className="facilities-split">
-          <div className="facilities-card facilities-panel">
+        <section className="facilities-qr-workspace">
+          <aside className="facilities-card facilities-panel facilities-qr-sidebar">
             <div className="facilities-panel__header">
-              <h3>Asset QR surface</h3>
-              <span>Scan-safe view</span>
+              <h3>Tracked assets</h3>
+              <span>{qrAssets.length} shown</span>
             </div>
-            {selectedQrAsset ? (
-              <div className="facilities-stack">
-                <div>
-                  <p className="facilities-eyebrow">{selectedQrAsset.resourceCode}</p>
-                  <h3>{selectedQrAsset.name}</h3>
-                  <p className="facilities-muted">{selectedQrAsset.locationText}</p>
-                </div>
-                <PseudoQr value={`${selectedQrAsset.resourceCode}-${selectedQrAsset.name}`} />
-                <div className="facilities-tags">
-                  <span className="facilities-tag">{STATUS_LABELS[selectedQrAsset.status] || selectedQrAsset.status}</span>
-                  <span className="facilities-tag">
-                    {CONDITION_LABELS[selectedQrAsset.condition] || selectedQrAsset.condition}
-                  </span>
-                  <span className="facilities-tag">
-                    {selectedQrAsset.availableFrom || '--'} - {selectedQrAsset.availableTo || '--'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="facilities-muted">No assets available to generate a QR summary.</p>
-            )}
-          </div>
+            <input
+              value={qrSearch}
+              onChange={(event) => setQrSearch(event.target.value)}
+              placeholder="Search code, name, location"
+            />
+            <div className="facilities-qr-sidebar__list">
+              {qrAssets.map((asset) => (
+                <button
+                  key={asset.id}
+                  type="button"
+                  className={`facilities-qr-sidebar__item ${selectedQrAsset?.id === asset.id ? 'is-active' : ''}`}
+                  onClick={() => setIssueDraft((current) => ({ ...current, assetId: String(asset.id) }))}
+                >
+                  <strong>{asset.resourceCode || asset.id}</strong>
+                  <span>{asset.name}</span>
+                  <small>{asset.locationText || 'Location pending'}</small>
+                </button>
+              ))}
+              {qrAssets.length === 0 ? <p className="facilities-muted">No assets match the current QR search.</p> : null}
+            </div>
+          </aside>
 
-          <div className="facilities-card facilities-panel">
-            <div className="facilities-panel__header">
-              <h3>Report an issue</h3>
-              <span>Backend-backed update</span>
+          <div className="facilities-stack">
+            <div className="facilities-card facilities-panel">
+              <div className="facilities-panel__header">
+                <div>
+                  <p className="facilities-eyebrow">QR tracking</p>
+                  <h3>{selectedQrAsset?.name || 'Asset QR surface'}</h3>
+                </div>
+                {selectedQrAsset ? <span>{selectedQrAsset.resourceCode}</span> : null}
+              </div>
+
+              {selectedQrAsset ? (
+                <div className="facilities-qr-hero">
+                  <div className="facilities-qr-hero__code">
+                    <div className="facilities-qr-canvas">
+                      {qrCodeUrl ? (
+                        <img
+                          src={qrCodeUrl}
+                          alt={`QR code for ${selectedQrAsset.name}`}
+                          className="facilities-qr-image"
+                        />
+                      ) : (
+                        <PseudoQr value={buildQrPayload(selectedQrAsset)} />
+                      )}
+                    </div>
+                    <div className="facilities-actions">
+                      <button
+                        type="button"
+                        className="facilities-button"
+                        onClick={() => downloadQrCode(selectedQrAsset, qrCodeUrl, setToast)}
+                        disabled={!qrCodeUrl}
+                      >
+                        Download QR
+                      </button>
+                      <button
+                        type="button"
+                        className="facilities-button facilities-button--ghost"
+                        onClick={() => downloadQrSummary(selectedQrAsset)}
+                      >
+                        Download summary
+                      </button>
+                      <button
+                        type="button"
+                        className="facilities-button facilities-button--ghost"
+                        onClick={() => copyQrPayload(selectedQrAsset, setToast)}
+                      >
+                        Copy payload
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="facilities-stack facilities-grow">
+                    <p className="facilities-muted">
+                      {selectedQrAsset.description || 'No description provided yet.'}
+                    </p>
+                    <div className="facilities-detail-grid">
+                      <Fact
+                        label="Type"
+                        value={TYPE_META[selectedQrAsset.resourceType]?.label || selectedQrAsset.resourceType}
+                      />
+                      <Fact label="Category" value={selectedQrAsset.category || '-'} />
+                      <Fact label="Capacity" value={selectedQrAsset.capacity} />
+                      <Fact label="Bookings" value={selectedQrAsset.totalBookings} />
+                      <Fact label="Status" value={STATUS_LABELS[selectedQrAsset.status] || selectedQrAsset.status} />
+                      <Fact
+                        label="Condition"
+                        value={CONDITION_LABELS[selectedQrAsset.condition] || selectedQrAsset.condition}
+                      />
+                    </div>
+                    <div className="facilities-tags">
+                      <span className="facilities-tag">{selectedQrAsset.locationText || 'Unknown location'}</span>
+                      <span className="facilities-tag">
+                        {selectedQrAsset.availableFrom || '--'} - {selectedQrAsset.availableTo || '--'}
+                      </span>
+                      <span className="facilities-tag">
+                        {selectedQrAsset.borrowed ? 'Borrowed' : 'Ready to use'}
+                      </span>
+                    </div>
+                    <div className="facilities-qr-payload">
+                      <span className="facilities-eyebrow">QR payload</span>
+                      <code>{buildQrPayload(selectedQrAsset)}</code>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="facilities-muted">No assets available to generate a QR summary.</p>
+              )}
             </div>
-            <div className="facilities-stack">
-              <Field label="Asset">
-                <select
-                  value={issueDraft.assetId}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, assetId: event.target.value }))}
-                >
-                  {assets.map((asset) => (
-                    <option key={asset.id} value={asset.id}>
-                      {asset.resourceCode} - {asset.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Severity">
-                <select
-                  value={issueDraft.severity}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, severity: event.target.value }))}
-                >
-                  {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((severity) => (
-                    <option key={severity} value={severity}>
-                      {severity}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Issue details" full>
-                <textarea
-                  rows="5"
-                  value={issueDraft.text}
-                  onChange={(event) => setIssueDraft((current) => ({ ...current, text: event.target.value }))}
-                  placeholder="Describe the problem noticed during usage or scanning."
-                />
-              </Field>
-              <button type="button" className="facilities-button" onClick={reportIssue}>
-                Submit report
-              </button>
+
+            <div className="facilities-card facilities-panel">
+              <div className="facilities-panel__header">
+                <h3>Report an issue</h3>
+                <span>{isAdmin ? 'Admin and user intake' : 'Send to facilities team'}</span>
+              </div>
+              <div className="facilities-stack">
+                <Field label="Asset">
+                  <select
+                    value={issueDraft.assetId}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, assetId: event.target.value }))}
+                  >
+                    {assets.map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.resourceCode} - {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Severity">
+                  <select
+                    value={issueDraft.severity}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, severity: event.target.value }))}
+                  >
+                    {['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'].map((severity) => (
+                      <option key={severity} value={severity}>
+                        {severity}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Issue details" full>
+                  <textarea
+                    rows="5"
+                    value={issueDraft.text}
+                    onChange={(event) => setIssueDraft((current) => ({ ...current, text: event.target.value }))}
+                    placeholder="Describe the problem noticed during usage or scanning."
+                  />
+                </Field>
+                <button type="button" className="facilities-button" onClick={reportIssue}>
+                  Submit report
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -632,7 +772,7 @@ export default function FacilitiesWorkspace() {
                     <h3>{issue.assetName}</h3>
                     <p>{issue.text}</p>
                     <span className="facilities-muted">
-                      {issue.locationText || 'Location pending'} · {issue.date || 'No date'}
+                      {issue.locationText || 'Location pending'} | {issue.date || 'No date'}
                     </span>
                   </div>
                   {isAdmin && issue.status !== 'RESOLVED' ? (
@@ -716,7 +856,7 @@ export default function FacilitiesWorkspace() {
                     <h3>{asset.name}</h3>
                     <p>{asset.locationText}</p>
                     <span className="facilities-muted">
-                      Last service {asset.lastServiceDate || 'unknown'} · Next service{' '}
+                      Last service {asset.lastServiceDate || 'unknown'} | Next service{' '}
                       {asset.nextServiceDate || 'unscheduled'}
                     </span>
                   </div>
@@ -790,6 +930,9 @@ export default function FacilitiesWorkspace() {
       {selectedAsset ? (
         <Modal title={selectedAsset.name} onClose={() => setSelectedAsset(null)}>
           <div className="facilities-stack">
+            <div className="facilities-detail-image">
+              <img src={selectedAsset.displayImageUrl} alt={selectedAsset.name} className="facilities-detail-image__asset" />
+            </div>
             <div className="facilities-detail-head">
               <TypeBadge type={selectedAsset.resourceType} />
               <div>
@@ -830,9 +973,9 @@ export default function FacilitiesWorkspace() {
       ) : null}
 
       {editorState ? (
-        <Modal title={editorState.original ? 'Edit asset' : 'Create asset'} onClose={() => setEditorState(null)}>
+        <Modal title={editorState.original ? 'Edit Asset' : 'New Asset'} onClose={() => setEditorState(null)}>
           <form className="facilities-form" onSubmit={submitAssetForm}>
-            <Field label="Code">
+            <Field label="Asset ID">
               <input
                 value={editorState.values.resourceCode}
                 onChange={(event) => updateForm(setEditorState, 'resourceCode', event.target.value)}
@@ -842,7 +985,7 @@ export default function FacilitiesWorkspace() {
             <Field label="Name">
               <input
                 value={editorState.values.name}
-                onChange={(event) => updateForm(setEditorState, 'name', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'name', sanitizeLetterInput(event.target.value))}
                 required
               />
             </Field>
@@ -861,16 +1004,24 @@ export default function FacilitiesWorkspace() {
             <Field label="Category">
               <input
                 value={editorState.values.category}
-                onChange={(event) => updateForm(setEditorState, 'category', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'category', sanitizeLetterInput(event.target.value))}
                 required
+              />
+            </Field>
+            <Field label="Location" full>
+              <input
+                value={editorState.values.locationText}
+                onChange={(event) => updateForm(setEditorState, 'locationText', event.target.value)}
               />
             </Field>
             <Field label="Capacity">
               <input
                 type="number"
                 min="0"
+                inputMode="numeric"
                 value={editorState.values.capacity}
-                onChange={(event) => updateForm(setEditorState, 'capacity', event.target.value)}
+                onChange={(event) => updateForm(setEditorState, 'capacity', sanitizeCapacityInput(event.target.value))}
+                onKeyDown={preventNegativeNumberInput}
               />
             </Field>
             <Field label="Status">
@@ -897,140 +1048,46 @@ export default function FacilitiesWorkspace() {
                 ))}
               </select>
             </Field>
-            <Field label="Borrowed">
-              <select
-                value={String(editorState.values.borrowed)}
-                onChange={(event) => updateForm(setEditorState, 'borrowed', event.target.value === 'true')}
-              >
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </Field>
-            <Field label="Building">
-              <input
-                value={editorState.values.building}
-                onChange={(event) => updateForm(setEditorState, 'building', event.target.value)}
-              />
-            </Field>
-            <Field label="Floor">
-              <input
-                type="number"
-                value={editorState.values.floorNumber}
-                onChange={(event) => updateForm(setEditorState, 'floorNumber', event.target.value)}
-              />
-            </Field>
-            <Field label="Room">
-              <input
-                value={editorState.values.roomNumber}
-                onChange={(event) => updateForm(setEditorState, 'roomNumber', event.target.value)}
-              />
-            </Field>
-            <Field label="Location">
-              <input
-                value={editorState.values.locationText}
-                onChange={(event) => updateForm(setEditorState, 'locationText', event.target.value)}
-              />
-            </Field>
-            <Field label="Available from">
+            <Field label="Opens">
               <input
                 type="time"
                 value={editorState.values.availableFrom}
                 onChange={(event) => updateForm(setEditorState, 'availableFrom', event.target.value)}
               />
             </Field>
-            <Field label="Available to">
+            <Field label="Closes">
               <input
                 type="time"
                 value={editorState.values.availableTo}
                 onChange={(event) => updateForm(setEditorState, 'availableTo', event.target.value)}
               />
             </Field>
-            <Field label="Rating">
-              <input
-                type="number"
-                min="0"
-                max="5"
-                step="0.1"
-                value={editorState.values.rating}
-                onChange={(event) => updateForm(setEditorState, 'rating', event.target.value)}
+            <Field label="Description" full>
+              <textarea
+                rows="3"
+                value={editorState.values.description}
+                onChange={(event) => updateForm(setEditorState, 'description', event.target.value)}
               />
             </Field>
-            <Field label="Bookings">
-              <input
-                type="number"
-                min="0"
-                value={editorState.values.totalBookings}
-                onChange={(event) => updateForm(setEditorState, 'totalBookings', event.target.value)}
-              />
-            </Field>
-            <Field label="Today">
-              <input
-                type="number"
-                min="0"
-                value={editorState.values.bookingsToday}
-                onChange={(event) => updateForm(setEditorState, 'bookingsToday', event.target.value)}
-              />
-            </Field>
-            <Field label="Last service">
-              <input
-                type="date"
-                value={editorState.values.lastServiceDate}
-                onChange={(event) => updateForm(setEditorState, 'lastServiceDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Next service">
-              <input
-                type="date"
-                value={editorState.values.nextServiceDate}
-                onChange={(event) => updateForm(setEditorState, 'nextServiceDate', event.target.value)}
-              />
-            </Field>
-            <Field label="Amenities">
-              <input
-                value={editorState.values.amenities}
-                onChange={(event) => updateForm(setEditorState, 'amenities', event.target.value)}
-                placeholder="Comma separated"
-              />
-            </Field>
-            <Field label="Monthly bookings">
-              <input
-                value={editorState.values.monthlyBookings}
-                onChange={(event) => updateForm(setEditorState, 'monthlyBookings', event.target.value)}
-                placeholder="12 comma-separated values"
-              />
-            </Field>
-            <Field label="Image URL">
+            <Field label="Image URL" full>
               <input
                 value={editorState.values.imageUrl}
                 onChange={(event) => updateForm(setEditorState, 'imageUrl', event.target.value)}
               />
             </Field>
-            <Field label="Needs approval">
-              <select
-                value={String(editorState.values.requiresApproval)}
-                onChange={(event) =>
-                  updateForm(setEditorState, 'requiresApproval', event.target.value === 'true')
-                }
-              >
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </Field>
-            <Field label="Active">
-              <select
-                value={String(editorState.values.isActive)}
-                onChange={(event) => updateForm(setEditorState, 'isActive', event.target.value === 'true')}
-              >
-                <option value="true">Yes</option>
-                <option value="false">No</option>
-              </select>
-            </Field>
-            <Field label="Description" full>
-              <textarea
-                rows="4"
-                value={editorState.values.description}
-                onChange={(event) => updateForm(setEditorState, 'description', event.target.value)}
-              />
+            <Field label="Features" full>
+              <div className="facilities-feature-list">
+                {FEATURE_OPTIONS.map((feature) => (
+                  <label key={feature} className="facilities-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={editorState.values.amenities.includes(feature)}
+                      onChange={() => toggleFeature(setEditorState, feature)}
+                    />
+                    <span>{feature}</span>
+                  </label>
+                ))}
+              </div>
             </Field>
             <div className="facilities-actions facilities-form__actions">
               <button
@@ -1041,7 +1098,7 @@ export default function FacilitiesWorkspace() {
                 Cancel
               </button>
               <button type="submit" className="facilities-button">
-                Save asset
+                {editorState.original ? 'Save Asset' : 'Add Asset'}
               </button>
             </div>
           </form>
@@ -1058,10 +1115,10 @@ function Modal({ children, title, onClose }) {
     <div className="facilities-modal">
       <div className="facilities-modal__backdrop" onClick={onClose} aria-hidden="true" />
       <div className="facilities-modal__content facilities-card">
-        <div className="facilities-panel__header">
+        <div className="facilities-modal__header">
           <h3>{title}</h3>
-          <button type="button" className="facilities-button facilities-button--ghost" onClick={onClose}>
-            Close
+          <button type="button" className="facilities-modal__close" onClick={onClose} aria-label="Close modal">
+            ×
           </button>
         </div>
         {children}
@@ -1134,6 +1191,122 @@ function PseudoQr({ value }) {
   )
 }
 
+function makeInlineAssetImage(title, accent) {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#09111f" />
+          <stop offset="100%" stop-color="#13253d" />
+        </linearGradient>
+        <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="${accent}" stop-opacity="0.95" />
+          <stop offset="100%" stop-color="#60a5fa" stop-opacity="0.72" />
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="900" fill="url(#bg)" />
+      <circle cx="920" cy="210" r="160" fill="${accent}" opacity="0.18" />
+      <circle cx="220" cy="160" r="110" fill="#38bdf8" opacity="0.12" />
+      <rect x="140" y="180" width="920" height="500" rx="32" fill="#0f172a" stroke="#334155" />
+      <rect x="210" y="245" width="460" height="290" rx="22" fill="#020617" stroke="#334155" />
+      <circle cx="440" cy="390" r="115" fill="none" stroke="url(#glow)" stroke-width="28" />
+      <circle cx="440" cy="390" r="56" fill="${accent}" opacity="0.72" />
+      <rect x="720" y="255" width="250" height="26" rx="13" fill="url(#glow)" opacity="0.95" />
+      <rect x="720" y="313" width="170" height="18" rx="9" fill="#475569" />
+      <rect x="720" y="352" width="210" height="18" rx="9" fill="#334155" />
+      <rect x="720" y="391" width="190" height="18" rx="9" fill="#334155" />
+      <rect x="720" y="475" width="190" height="110" rx="22" fill="#111827" stroke="#334155" />
+      <path d="M790 520l28-32 30 36 22-24 40 48H790z" fill="${accent}" opacity="0.9" />
+      <text x="140" y="770" fill="#e2e8f0" font-size="54" font-family="Segoe UI, Arial, sans-serif" font-weight="700">${title}</text>
+      <text x="140" y="822" fill="#94a3b8" font-size="28" font-family="Segoe UI, Arial, sans-serif">Smart Campus Catalogue</text>
+    </svg>
+  `.trim()
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+}
+
+function resolveAssetImage(asset) {
+  if (asset.imageUrl) return asset.imageUrl
+
+  const text = [
+    asset.name,
+    asset.category,
+    asset.resourceType,
+    asset.locationText,
+    asset.building,
+    asset.roomNumber,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (text.includes('canon')) return IMAGE_LIBRARY.cameraCanon
+  if (text.includes('sony') || text.includes('fx3')) return IMAGE_LIBRARY.cameraSony
+  if (text.includes('drone')) return IMAGE_LIBRARY.drone
+  if (text.includes('projector')) return IMAGE_LIBRARY.projector
+  if (text.includes('laptop')) return IMAGE_LIBRARY.laptop
+  if (text.includes('robot')) return IMAGE_LIBRARY.labRobotics
+  if (text.includes('meeting room') || text.includes('board room') || text.includes('vip')) return IMAGE_LIBRARY.meeting
+  if (text.includes('camera hall')) return IMAGE_LIBRARY.hallCamera
+  if (text.includes('lecture hall') || text.includes('hall')) return IMAGE_LIBRARY.hallStandard
+  if (text.includes('camera lab') || text.includes('media')) return IMAGE_LIBRARY.labCamera
+  if (text.includes('project lab') || text.includes('project')) return IMAGE_LIBRARY.labProject
+  if (text.includes('lab')) return IMAGE_LIBRARY.labGeneral
+
+  return IMAGE_LIBRARY.labGeneral
+}
+
+function buildQrPayload(asset) {
+  return [
+    `Name: ${asset.name || '-'}`,
+    `Code: ${asset.resourceCode || asset.id || '-'}`,
+    `Type: ${TYPE_META[asset.resourceType]?.label || asset.resourceType || '-'}`,
+    `Category: ${asset.category || '-'}`,
+    `Location: ${asset.locationText || '-'}`,
+    `Capacity: ${asset.capacity ?? '-'}`,
+    `Status: ${STATUS_LABELS[asset.status] || asset.status || '-'}`,
+    `Available: ${asset.availableFrom || '--'} - ${asset.availableTo || '--'}`,
+    `Condition: ${CONDITION_LABELS[asset.condition] || asset.condition || '-'}`,
+    `Description: ${asset.description || 'No description available.'}`,
+  ].join('\n')
+}
+
+function downloadQrSummary(asset) {
+  const blob = new Blob([buildQrPayload(asset)], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${asset.resourceCode || asset.id}-qr-summary.txt`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
+function downloadQrCode(asset, qrCodeUrl, setToast) {
+  if (!qrCodeUrl) {
+    setToast({ tone: 'danger', message: 'QR image is still being prepared.' })
+    return
+  }
+
+  const link = document.createElement('a')
+  link.href = qrCodeUrl
+  link.download = `${asset.resourceCode || asset.id}-qr.png`
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  setToast({ tone: 'success', message: 'QR image downloaded successfully.' })
+}
+
+async function copyQrPayload(asset, setToast) {
+  try {
+    await navigator.clipboard.writeText(buildQrPayload(asset))
+    setToast({ tone: 'success', message: 'QR payload copied to the clipboard.' })
+  } catch {
+    setToast({ tone: 'danger', message: 'Clipboard access is blocked in this browser.' })
+  }
+}
+
 function normalizeAsset(resource) {
   return {
     ...resource,
@@ -1146,6 +1319,7 @@ function normalizeAsset(resource) {
     issues: Array.isArray(resource.issues) ? resource.issues : [],
     borrowed: Boolean(resource.borrowed),
     condition: resource.condition || 'GOOD',
+    displayImageUrl: resolveAssetImage(resource),
   }
 }
 
@@ -1201,7 +1375,7 @@ function assetToForm(asset) {
     nextServiceDate: asset.nextServiceDate || '',
     totalBookings: String(asset.totalBookings ?? 0),
     bookingsToday: String(asset.bookingsToday ?? 0),
-    amenities: (asset.amenities || []).join(', '),
+    amenities: asset.amenities || [],
     monthlyBookings: normalizeMonthlyBookings(asset.monthlyBookings).join(','),
     description: asset.description || '',
     imageUrl: asset.imageUrl || '',
@@ -1211,10 +1385,10 @@ function assetToForm(asset) {
 }
 
 function formToPayload(values, originalAsset) {
-  const monthlyBookings = values.monthlyBookings
-    .split(',')
-    .map((item) => Number(item.trim()))
-    .filter((item) => !Number.isNaN(item))
+  const validationMessage = validateAssetForm(values)
+  if (validationMessage) {
+    throw new Error(validationMessage)
+  }
 
   return {
     ...assetToPayload(originalAsset),
@@ -1223,7 +1397,7 @@ function formToPayload(values, originalAsset) {
     description: values.description.trim(),
     resourceType: values.resourceType,
     category: values.category.trim(),
-    capacity: Number(values.capacity) || 0,
+    capacity: values.capacity === '' ? 0 : Number(values.capacity),
     building: values.building.trim(),
     floorNumber: values.floorNumber === '' ? null : Number(values.floorNumber),
     roomNumber: values.roomNumber.trim(),
@@ -1238,13 +1412,101 @@ function formToPayload(values, originalAsset) {
     nextServiceDate: values.nextServiceDate || null,
     totalBookings: Number(values.totalBookings) || 0,
     bookingsToday: Number(values.bookingsToday) || 0,
-    amenities: values.amenities.split(',').map((item) => item.trim()).filter(Boolean),
-    monthlyBookings: normalizeMonthlyBookings(monthlyBookings),
+    amenities: values.amenities,
+    monthlyBookings: normalizeMonthlyBookings(originalAsset?.monthlyBookings),
     issues: originalAsset?.issues || [],
     imageUrl: values.imageUrl.trim(),
     requiresApproval: Boolean(values.requiresApproval),
     isActive: Boolean(values.isActive),
   }
+}
+
+function buildEmptyForm(assets) {
+  return {
+    resourceCode: generateNextResourceCode(assets),
+    name: '',
+    resourceType: 'LAB',
+    category: '',
+    capacity: '',
+    building: '',
+    floorNumber: '',
+    roomNumber: '',
+    locationText: '',
+    availableFrom: '08:00',
+    availableTo: '18:00',
+    status: 'ACTIVE',
+    condition: 'GOOD',
+    borrowed: false,
+    rating: '0',
+    lastServiceDate: '',
+    nextServiceDate: '',
+    totalBookings: '0',
+    bookingsToday: '0',
+    amenities: [],
+    monthlyBookings: '0,0,0,0,0,0,0,0,0,0,0,0',
+    description: '',
+    imageUrl: '',
+    requiresApproval: false,
+    isActive: true,
+  }
+}
+
+function generateNextResourceCode(assets) {
+  const nextNumber =
+    assets.reduce((max, asset) => {
+      const match = String(asset.resourceCode || '').match(/ASSET-(\d+)/i)
+      return match ? Math.max(max, Number(match[1])) : max
+    }, 0) + 1
+
+  return `ASSET-${nextNumber}`
+}
+
+function sanitizeLetterInput(value) {
+  return value.replace(/[^A-Za-z\s]/g, '')
+}
+
+function sanitizeCapacityInput(value) {
+  if (value === '') return ''
+  const digitsOnly = value.replace(/[^\d]/g, '')
+  return digitsOnly === '' ? '' : String(Number(digitsOnly))
+}
+
+function preventNegativeNumberInput(event) {
+  if (event.key === '-' || event.key === 'e' || event.key === 'E') {
+    event.preventDefault()
+  }
+}
+
+function toggleFeature(setter, feature) {
+  setter((current) => {
+    const features = current.values.amenities.includes(feature)
+      ? current.values.amenities.filter((item) => item !== feature)
+      : [...current.values.amenities, feature]
+
+    return {
+      ...current,
+      values: {
+        ...current.values,
+        amenities: features,
+      },
+    }
+  })
+}
+
+function validateAssetForm(values) {
+  if (!/^[A-Za-z\s]+$/.test(values.name.trim())) {
+    return 'Name can contain letters only.'
+  }
+
+  if (!/^[A-Za-z\s]+$/.test(values.category.trim())) {
+    return 'Category can contain letters only.'
+  }
+
+  if (values.capacity !== '' && Number(values.capacity) < 0) {
+    return 'Capacity cannot be a negative number.'
+  }
+
+  return ''
 }
 
 function normalizeMonthlyBookings(values) {

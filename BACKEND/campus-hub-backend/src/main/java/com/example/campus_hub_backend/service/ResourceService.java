@@ -1,6 +1,7 @@
 package com.example.campus_hub_backend.service;
 
 import com.example.campus_hub_backend.dto.ResourceCreateRequest;
+import com.example.campus_hub_backend.dto.ResourceIssueReportRequest;
 import com.example.campus_hub_backend.dto.ResourceResponse;
 import com.example.campus_hub_backend.dto.ResourceStatusUpdateRequest;
 import com.example.campus_hub_backend.dto.ResourceUpdateRequest;
@@ -29,6 +30,8 @@ public interface ResourceService {
     ResourceResponse updateResource(Long id, ResourceUpdateRequest request);
 
     ResourceResponse updateStatus(Long id, ResourceStatusUpdateRequest request);
+
+    ResourceResponse reportIssue(Long id, ResourceIssueReportRequest request);
 
     void deleteResource(Long id);
 }
