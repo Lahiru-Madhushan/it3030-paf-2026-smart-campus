@@ -12,14 +12,14 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-yellow-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] p-6">
       <div className="mx-auto max-w-4xl">
 
         {/* Top Bar */}
         <div className="mb-6 flex items-center justify-between">
           <button
             onClick={() => navigate('/dashboard/user')}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm border border-gray-200 hover:bg-gray-100"
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-[#0A192F] shadow-sm transition hover:bg-[#e8edf5]"
           >
             <ArrowLeft size={18} />
             Back
@@ -27,7 +27,7 @@ export default function UserProfile() {
 
           <button
             onClick={handleLogout}
-            className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-500"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#0A192F] px-4 py-2 text-sm font-semibold text-white shadow-md transition hover:bg-[#081425]"
           >
             <LogOut size={18} />
             Logout
@@ -35,11 +35,11 @@ export default function UserProfile() {
         </div>
 
         {/* Profile Card */}
-        <div className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
 
           {/* Top Info */}
           <div className="flex flex-col items-center text-center">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-100 text-yellow-700 shadow-sm">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#e8edf5] text-[#0A192F] shadow-sm">
               <UserCircle2 size={50} />
             </div>
 
@@ -51,12 +51,12 @@ export default function UserProfile() {
           </div>
 
           {/* Divider */}
-          <div className="my-6 border-t border-gray-200"></div>
+          <div className="my-6 border-t border-slate-200"></div>
 
           {/* Details */}
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl bg-gray-50 p-4 flex items-center gap-3">
-              <UserCircle2 className="text-gray-500" size={20} />
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+              <UserCircle2 className="text-slate-500" size={20} />
               <div>
                 <p className="text-sm text-gray-500">Full Name</p>
                 <p className="font-semibold text-gray-900">
@@ -65,8 +65,8 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-gray-50 p-4 flex items-center gap-3">
-              <Mail className="text-gray-500" size={20} />
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4">
+              <Mail className="text-slate-500" size={20} />
               <div>
                 <p className="text-sm text-gray-500">Email Address</p>
                 <p className="font-semibold text-gray-900">
@@ -75,8 +75,8 @@ export default function UserProfile() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-gray-50 p-4 flex items-center gap-3 md:col-span-2">
-              <ShieldCheck className="text-gray-500" size={20} />
+            <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 md:col-span-2">
+              <ShieldCheck className="text-slate-500" size={20} />
               <div>
                 <p className="text-sm text-gray-500">Role</p>
                 <p className="font-semibold capitalize text-gray-900">
@@ -87,14 +87,7 @@ export default function UserProfile() {
           </div>
 
           {/* Optional Section */}
-          <div className="mt-8 rounded-2xl bg-yellow-50 p-5 text-center">
-            <p className="text-sm text-gray-600">
-              You can extend this profile later with:
-            </p>
-            <p className="mt-2 text-sm font-medium text-gray-800">
-              Profile picture • Edit profile • Password change • Activity history
-            </p>
-          </div>
+
         </div>
       </div>
     </div>
