@@ -60,7 +60,7 @@ function TicketList() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Loading tickets...
           </div>
@@ -74,7 +74,7 @@ function TicketList() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Error: {error}
           </div>
@@ -87,7 +87,7 @@ function TicketList() {
   return (
     <>
       {isUser && <Header />}
-      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Page title row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -103,17 +103,9 @@ function TicketList() {
         {/* Only show New Ticket button for non-admin users */}
         {!isAdmin && (
           <button
+            type="button"
             onClick={() => navigate('/incidents/create')}
-            style={{
-              background: '#facc15',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '10px 20px',
-              fontSize: '14px',
-              fontWeight: '600',
-              cursor: 'pointer',
-            }}
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#0A192F] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#081425]"
           >
             + New Ticket
           </button>
@@ -128,21 +120,14 @@ function TicketList() {
           placeholder="Search by title, location, category..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: '200px',
-            padding: '8px 12px',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            fontSize: '14px',
-          }}
+          className="min-w-[200px] flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
         />
 
         {/* Status filter */}
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px' }}
+          className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
         >
           <option value="ALL">All Status</option>
           <option value="OPEN">Open</option>
@@ -156,7 +141,7 @@ function TicketList() {
         <select
           value={filterPriority}
           onChange={e => setFilterPriority(e.target.value)}
-          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px' }}
+          className="rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-900 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10"
         >
           <option value="ALL">All Priority</option>
           <option value="HIGH">High</option>
@@ -167,12 +152,13 @@ function TicketList() {
 
       {/* Ticket list */}
       {filteredTickets.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px', color: '#666', background: '#f9f9f9', borderRadius: '12px' }}>
-          <p style={{ fontSize: '16px', marginBottom: '12px' }}>No tickets found</p>
+        <div className="rounded-3xl border border-slate-200 bg-white p-14 text-center text-gray-600 shadow-sm">
+          <p className="mb-4 text-base font-medium">No tickets found</p>
           {!isAdmin && (
             <button
+              type="button"
               onClick={() => navigate('/incidents/create')}
-              style={{ background: '#185FA5', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', cursor: 'pointer' }}
+              className="inline-flex items-center justify-center rounded-2xl bg-[#0A192F] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#081425]"
             >
               Create your first ticket
             </button>

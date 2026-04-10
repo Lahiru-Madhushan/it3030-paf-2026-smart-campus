@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { notificationService } from '../../services/notificationService'
 import { useAuth } from '../../context/AuthContext'
 
-export default function NotificationBell() {
+export default function NotificationBell({ variant = 'light' }) {
   const { auth } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
@@ -83,8 +83,13 @@ export default function NotificationBell() {
   return (
     <div className="relative">
       <button
+        type="button"
         onClick={() => setOpen(prev => !prev)}
-        className="relative rounded-full p-2 hover:bg-gray-100"
+        className={
+          variant === 'dark'
+            ? 'relative rounded-full p-2 text-white hover:bg-white/10'
+            : 'relative rounded-full p-2 text-gray-800 hover:bg-gray-100'
+        }
       >
         <Bell size={20} />
         {unreadCount > 0 && (

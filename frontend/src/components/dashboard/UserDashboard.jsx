@@ -1,9 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import {
-  UserCircle2,
-  LogOut,
-} from 'lucide-react'
-import logo1 from '../../assets/logo1.png'
+import { UserCircle2, LogOut } from 'lucide-react'
+import logo1 from '../../assets/logo2.png'
 import { useAuth } from '../../context/AuthContext'
 import NotificationBell from '../notifications/NotificationBell'
 
@@ -18,93 +15,114 @@ export default function UserLayout() {
   }
 
   const navItems = [
-    { label: 'Home', path: '/user/home' },
+    { label: 'Home', path: '/user/home', matchPaths: ['/user/home', '/dashboard/user'] },
     { label: 'Facilities', path: '/user/facilities' },
     { label: 'Booking', path: '/bookings/new' },
     { label: 'My Bookings', path: '/bookings/my-bookings' },
     { label: 'Ticket', path: '/incidents' },
   ]
 
-  const isActive = (path) => {
-    if (path === '/user') return location.pathname === '/user'
-    return location.pathname.startsWith(path)
+  const isActive = (item) => {
+    const path = item.path
+    if (item.matchPaths?.length) {
+      return item.matchPaths.some((p) => location.pathname === p)
+    }
+    if (path === '/incidents') {
+      return (
+        location.pathname === '/incidents' || location.pathname.startsWith('/incidents/')
+      )
+    }
+    return location.pathname === path || location.pathname.startsWith(`${path}/`)
   }
 
+  const navButtonClass = (active) =>
+    active
+      ? 'bg-white text-[#0A192F] shadow-sm'
+      : 'text-white hover:bg-white/10'
+
   return (
-    <div className="bg-white text-gray-800">
-      {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <img
-              src={logo1}
-              alt="Campus Hub Logo"
-              className="h-11 w-11 object-contain"
-            />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">Campus Hub</h1>
-              <p className="text-xs text-gray-500">Smart Student Services</p>
-            </div>
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0A192F] text-white shadow-md">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 sm:py-4">
+        {/* Brand */}
+        <button
+          type="button"
+          onClick={() => navigate('/user/home')}
+          className="flex min-w-0 flex-shrink-0 items-center gap-3 text-left transition hover:opacity-90"
+        >
+          <img
+            src={logo1}
+            alt=""
+             className="h-13 w-12 shrink-0 object-cover sm:h-14 sm:w-14"
+          />
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-bold leading-tight text-white sm:text-lg">
+              Campus Hub
+            </h1>
+            <p className="truncate text-xs text-white/80 sm:text-[13px]">
+              Smart Student Services
+            </p>
           </div>
+        </button>
 
-          {/* Desktop Nav */}
-          <nav className="hidden items-center gap-3 md:flex">
-            {navItems.map((item) => (
+        {/* Desktop nav */}
+        <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+          {navItems.map((item) => {
+            const active = isActive(item)
+            return (
               <button
                 key={item.path}
+                type="button"
                 onClick={() => navigate(item.path)}
-                className={`rounded-2xl px-4 py-2 text-sm font-semibold transition ${
-                  isActive(item.path)
-                    ? 'bg-[#0A192F] text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold transition sm:px-4 ${navButtonClass(active)}`}
               >
                 {item.label}
               </button>
-            ))}
-          </nav>
+            )
+          })}
+        </nav>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3">
-            <NotificationBell />
+        {/* Actions */}
+        <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+          <NotificationBell variant="dark" />
 
-            <button
-              onClick={() => navigate('/profile')}
-              className="rounded-2xl bg-gray-100 p-3 text-gray-700 hover:bg-gray-200"
-            >
-              <UserCircle2 size={20} />
-            </button>
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            className="rounded-full bg-white/15 p-2.5 text-white transition hover:bg-white/25"
+            aria-label="Profile"
+          >
+            <UserCircle2 size={20} strokeWidth={2} />
+          </button>
 
-            <button
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#0A192F] px-4 py-3 text-sm font-semibold text-white hover:bg-[#081425]"
-            >
-              <LogOut size={18} />
-              Logout
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-semibold text-[#0A192F] shadow-sm transition hover:bg-white/95 sm:px-4 sm:py-2.5"
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
         </div>
+      </div>
 
-        {/* Mobile Nav */}
-        <div className="border-t border-gray-200 bg-gray-50 px-4 py-3 md:hidden">
-          <div className="flex flex-wrap gap-2">
-            {navItems.map((item) => (
+      {/* Mobile nav */}
+      <div className="border-t border-white/10 px-3 py-3 lg:hidden">
+        <div className="mx-auto flex max-w-7xl flex-wrap gap-2">
+          {navItems.map((item) => {
+            const active = isActive(item)
+            return (
               <button
                 key={item.path}
+                type="button"
                 onClick={() => navigate(item.path)}
-                className={`rounded-xl border px-4 py-2 text-sm ${
-                  isActive(item.path)
-                    ? 'border-[#0A192F] bg-[#0A192F] text-white'
-                    : 'border-gray-200 bg-white text-gray-700'
-                }`}
+                className={`rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm ${navButtonClass(active)}`}
               >
                 {item.label}
               </button>
-            ))}
-          </div>
+            )
+          })}
         </div>
-      </header>
-    </div>
+      </div>
+    </header>
   )
 }

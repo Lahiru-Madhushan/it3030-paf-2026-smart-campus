@@ -7,7 +7,7 @@ import {
   ArrowRight,
   UserCircle2,
 } from 'lucide-react'
-import logo1 from '../assets/logo1.png'
+import logo1 from '../assets/logo2.png'
 import { useAuth } from '../context/AuthContext'
 import Header from './dashboard/UserDashboard'
 import Footer from './dashboard/userFooter'
