@@ -7,7 +7,7 @@ import Header from '../dashboard/UserDashboard'
 import Footer from '../dashboard/userFooter'
 
 const statusColors = {
-  OPEN: { bg: '#E6F1FB', text: '#0C447C', border: '#185FA5' },
+  OPEN: { bg: '#e8edf5', text: '#0A192F', border: '#0A192F' },
   IN_PROGRESS: { bg: '#FAEEDA', text: '#633806', border: '#BA7517' },
   RESOLVED: { bg: '#E1F5EE', text: '#085041', border: '#0F6E56' },
   CLOSED: { bg: '#F1EFE8', text: '#444441', border: '#5F5E5A' },
@@ -176,7 +176,7 @@ function TicketDetail() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Please login to view this ticket.
           </div>
@@ -190,7 +190,7 @@ function TicketDetail() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-gray-600 sm:px-4">
             Loading ticket...
           </div>
@@ -204,7 +204,7 @@ function TicketDetail() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Error: {error}
           </div>
@@ -218,7 +218,7 @@ function TicketDetail() {
     return (
       <>
         {isUser && <Header />}
-        <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+        <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
           <div className="mx-auto w-full max-w-7xl px-2 text-center text-red-700 sm:px-4">
             Ticket not found or you don&apos;t have permission to view it.
           </div>
@@ -234,18 +234,19 @@ function TicketDetail() {
   return (
     <>
       {isUser && <Header />}
-      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
       {/* Back button */}
       <button
+        type="button"
         onClick={() => navigate(-1)}
-        style={{ background: 'none', border: 'none', color: '#185FA5', cursor: 'pointer', fontSize: '14px', marginBottom: '16px', padding: 0 }}
+        className="mb-4 border-0 bg-transparent p-0 text-sm font-semibold text-[#0A192F] transition hover:text-[#081425]"
       >
         ← Back
       </button>
 
       {/* Ticket header */}
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', marginBottom: '16px' }}>
+      <div className="mb-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', color: '#1a1a1a', flex: 1 }}>
             {ticket.title}
@@ -326,9 +327,9 @@ function TicketDetail() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: '8px',
-                  border: `2px solid ${selectedStatus === s ? '#185FA5' : '#ddd'}`,
-                  background: selectedStatus === s ? '#E6F1FB' : '#fff',
-                  color: selectedStatus === s ? '#185FA5' : '#333',
+                  border: `2px solid ${selectedStatus === s ? '#0A192F' : '#e2e8f0'}`,
+                  background: selectedStatus === s ? '#e8edf5' : '#fff',
+                  color: selectedStatus === s ? '#0A192F' : '#333',
                   cursor: 'pointer',
                   fontWeight: '600',
                   fontSize: '13px',
@@ -362,7 +363,7 @@ function TicketDetail() {
           <button
             onClick={handleStatusUpdate}
             disabled={!selectedStatus || actionLoading}
-            style={{ background: selectedStatus ? '#185FA5' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: selectedStatus ? 'pointer' : 'not-allowed' }}
+            style={{ background: selectedStatus ? '#0A192F' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: selectedStatus ? 'pointer' : 'not-allowed' }}
           >
             {actionLoading ? 'Updating...' : 'Update Status'}
           </button>
@@ -384,7 +385,7 @@ function TicketDetail() {
             <button
               onClick={handleAssign}
               disabled={actionLoading}
-              style={{ background: '#185FA5', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+              style={{ background: '#0A192F', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 20px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
             >
               Assign
             </button>
@@ -419,7 +420,7 @@ function TicketDetail() {
       )}
 
       {/* Comments section */}
-      <div style={{ background: '#fff', borderRadius: '12px', padding: '20px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-lg">
         <h3 style={{ margin: '0 0 16px', fontSize: '16px', fontWeight: '600' }}>
           Comments ({comments.length})
         </h3>
@@ -465,7 +466,7 @@ function TicketDetail() {
                       <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                         <button
                           onClick={() => handleEditComment(comment.id)}
-                          style={{ background: '#185FA5', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}
+                          style={{ background: '#0A192F', color: '#fff', border: 'none', borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer' }}
                         >
                           Save
                         </button>
@@ -489,7 +490,7 @@ function TicketDetail() {
                   <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
                     <button
                       onClick={() => { setEditingComment(comment.id); setEditContent(comment.content) }}
-                      style={{ background: '#E6F1FB', color: '#185FA5', border: 'none', borderRadius: '6px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}
+                      style={{ background: '#e8edf5', color: '#0A192F', border: 'none', borderRadius: '8px', padding: '4px 10px', fontSize: '12px', cursor: 'pointer' }}
                     >
                       Edit
                     </button>
@@ -517,9 +518,14 @@ function TicketDetail() {
               style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box', resize: 'vertical' }}
             />
             <button
+              type="button"
               onClick={handleAddComment}
               disabled={!newComment.trim()}
-              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#facc15', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
+              className={`mt-2 inline-flex items-center justify-center rounded-2xl border-0 px-6 py-2.5 text-sm font-semibold text-white transition ${
+                newComment.trim()
+                  ? 'cursor-pointer bg-[#0A192F] hover:bg-[#081425]'
+                  : 'cursor-not-allowed bg-slate-300'
+              }`}
             >
               Add Comment
             </button>
@@ -539,7 +545,7 @@ function TicketDetail() {
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim()}
-              style={{ marginTop: '8px', background: newComment.trim() ? '#185FA5' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
+              style={{ marginTop: '8px', background: newComment.trim() ? '#0A192F' : '#ccc', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 24px', fontSize: '14px', fontWeight: '600', cursor: newComment.trim() ? 'pointer' : 'not-allowed' }}
             >
               Add Comment
             </button>

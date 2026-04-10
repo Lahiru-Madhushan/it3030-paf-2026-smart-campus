@@ -1,7 +1,7 @@
 import React from 'react'
 
 const statusColors = {
-  OPEN: { bg: '#E6F1FB', text: '#0C447C', border: '#185FA5' },
+  OPEN: { bg: '#e8edf5', text: '#0A192F', border: '#0A192F' },
   IN_PROGRESS: { bg: '#FAEEDA', text: '#633806', border: '#BA7517' },
   RESOLVED: { bg: '#E1F5EE', text: '#085041', border: '#0F6E56' },
   CLOSED: { bg: '#F1EFE8', text: '#444441', border: '#5F5E5A' },

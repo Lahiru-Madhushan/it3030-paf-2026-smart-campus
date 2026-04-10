@@ -62,15 +62,8 @@ function TicketForm() {
     }
   }
 
-  const inputStyle = {
-    width: '100%',
-    padding: '10px 12px',
-    borderRadius: '8px',
-    border: '1px solid #ddd',
-    fontSize: '14px',
-    boxSizing: 'border-box',
-    marginTop: '6px',
-  }
+  const inputClass =
+    'mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-[#0A192F] focus:outline-none focus:ring-2 focus:ring-[#0A192F]/10 box-border'
 
   const labelStyle = {
     fontSize: '14px',
@@ -81,14 +74,15 @@ function TicketForm() {
   return (
     <>
       {isUser && <Header />}
-      <section className="min-h-screen w-full bg-gradient-to-br from-white via-gray-50 to-yellow-50 py-12 px-4">
+      <section className="min-h-screen w-full bg-gradient-to-br from-white via-slate-50 to-[#e8edf5] py-12 px-4">
         <div className="mx-auto w-full max-w-7xl px-2 sm:px-4">
           <div className="mx-auto w-full max-w-2xl">
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <button
+          type="button"
           onClick={() => navigate('/incidents')}
-          style={{ background: 'none', border: 'none', color: '#facc15', cursor: 'pointer', fontSize: '14px', marginBottom: '8px', padding: 0 }}
+          className="mb-2 border-0 bg-transparent p-0 text-sm font-semibold text-[#0A192F] transition hover:text-[#081425]"
         >
           ← Back to tickets
         </button>
@@ -101,7 +95,10 @@ function TicketForm() {
       </div>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} style={{ background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8"
+      >
 
         {error && (
           <div style={{ background: '#FCEBEB', color: '#A32D2D', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
@@ -119,7 +116,7 @@ function TicketForm() {
             onChange={handleChange}
             placeholder="e.g. Projector broken in Lab 3"
             required
-            style={inputStyle}
+            className={inputClass}
           />
         </div>
 
@@ -133,7 +130,7 @@ function TicketForm() {
             placeholder="Describe the issue in detail..."
             required
             rows={4}
-            style={{ ...inputStyle, resize: 'vertical' }}
+            className={`${inputClass} resize-y`}
           />
         </div>
 
@@ -141,7 +138,7 @@ function TicketForm() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
           <div>
             <label style={labelStyle}>Category *</label>
-            <select name="category" value={form.category} onChange={handleChange} style={inputStyle}>
+            <select name="category" value={form.category} onChange={handleChange} className={inputClass}>
               <option value="ELECTRICAL">Electrical</option>
               <option value="PLUMBING">Plumbing</option>
               <option value="EQUIPMENT">Equipment</option>
@@ -153,7 +150,7 @@ function TicketForm() {
           </div>
           <div>
             <label style={labelStyle}>Priority *</label>
-            <select name="priority" value={form.priority} onChange={handleChange} style={inputStyle}>
+            <select name="priority" value={form.priority} onChange={handleChange} className={inputClass}>
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
               <option value="HIGH">High</option>
@@ -171,7 +168,7 @@ function TicketForm() {
             onChange={handleChange}
             placeholder="e.g. Lab 3, Room 201, Main Hall"
             required
-            style={inputStyle}
+            className={inputClass}
           />
         </div>
 
@@ -184,7 +181,7 @@ function TicketForm() {
             value={form.contactDetails}
             onChange={handleChange}
             placeholder="e.g. ext. 1234 or your phone number"
-            style={inputStyle}
+            className={inputClass}
           />
         </div>
 
@@ -223,18 +220,18 @@ function TicketForm() {
         </div>
 
         {/* Submit */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="flex gap-3">
           <button
             type="button"
             onClick={() => navigate('/incidents')}
-            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff', fontSize: '14px', fontWeight: '600', cursor: 'pointer', color: '#333' }}
+            className="flex-1 rounded-2xl border border-[#0A192F] bg-white py-3 text-sm font-semibold text-[#0A192F] transition hover:bg-[#e8edf5]"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            style={{ flex: 2, padding: '12px', borderRadius: '8px', border: 'none', background: loading ? '#ccc' : '#facc15', color: '#fff', fontSize: '14px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer' }}
+            className="inline-flex flex-[2] items-center justify-center rounded-2xl bg-[#0A192F] py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Submitting...' : 'Submit Ticket'}
           </button>
