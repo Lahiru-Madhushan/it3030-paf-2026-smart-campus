@@ -19,6 +19,10 @@ const TYPE_OPTIONS = ['LECTURE_HALL', 'MEETING_ROOM', 'ROOM', 'LAB', 'EQUIPMENT'
 const STATUS_OPTIONS = ['ACTIVE', 'OUT_OF_SERVICE', 'UNDER_MAINTENANCE', 'INACTIVE', 'AVAILABLE']
 const CONDITION_OPTIONS = ['GOOD', 'REPAIR_NEEDED']
 const FEATURE_OPTIONS = ['Projects', 'Camera']
+const CAPACITY_LIMITS = {
+  LAB: 60,
+  LECTURE_HALL: 250,
+}
 
 const TYPE_META = {
   LECTURE_HALL: { label: 'Lecture Hall', icon: 'LH', tone: 'facilities-type--blue' },
@@ -502,7 +506,12 @@ export default function FacilitiesWorkspace() {
             {filteredAssets.map((asset) => (
               <article key={asset.id} className="facilities-card facilities-asset">
                 <div className="facilities-asset__media">
-                  <img src={asset.displayImageUrl} alt={asset.name} className="facilities-asset__image" />
+                  <img
+                    src={asset.displayImageUrl}
+                    alt={asset.name}
+                    className="facilities-asset__image"
+                    onError={(event) => handleAssetImageError(event, asset)}
+                  />
                   <div className="facilities-asset__overlay">
                     <span className="facilities-tag">{asset.resourceCode}</span>
                     <span className="facilities-tag">{TYPE_META[asset.resourceType]?.label || asset.resourceType}</span>
@@ -931,7 +940,12 @@ export default function FacilitiesWorkspace() {
         <Modal title={selectedAsset.name} onClose={() => setSelectedAsset(null)}>
           <div className="facilities-stack">
             <div className="facilities-detail-image">
-              <img src={selectedAsset.displayImageUrl} alt={selectedAsset.name} className="facilities-detail-image__asset" />
+              <img
+                src={selectedAsset.displayImageUrl}
+                alt={selectedAsset.name}
+                className="facilities-detail-image__asset"
+                onError={(event) => handleAssetImageError(event, selectedAsset)}
+              />
             </div>
             <div className="facilities-detail-head">
               <TypeBadge type={selectedAsset.resourceType} />
@@ -1014,10 +1028,33 @@ export default function FacilitiesWorkspace() {
                 onChange={(event) => updateForm(setEditorState, 'locationText', event.target.value)}
               />
             </Field>
+            <Field label="Building">
+              <input
+                value={editorState.values.building}
+                onChange={(event) => updateForm(setEditorState, 'building', event.target.value)}
+              />
+            </Field>
+            <Field label="Floor">
+              <input
+                type="number"
+                min="0"
+                inputMode="numeric"
+                value={editorState.values.floorNumber}
+                onChange={(event) => updateForm(setEditorState, 'floorNumber', sanitizeCapacityInput(event.target.value))}
+                onKeyDown={preventNegativeNumberInput}
+              />
+            </Field>
+            <Field label="Room Number">
+              <input
+                value={editorState.values.roomNumber}
+                onChange={(event) => updateForm(setEditorState, 'roomNumber', event.target.value)}
+              />
+            </Field>
             <Field label="Capacity">
               <input
                 type="number"
                 min="0"
+                max={getCapacityLimit(editorState.values.resourceType) ?? undefined}
                 inputMode="numeric"
                 value={editorState.values.capacity}
                 onChange={(event) => updateForm(setEditorState, 'capacity', sanitizeCapacityInput(event.target.value))}
@@ -1067,12 +1104,6 @@ export default function FacilitiesWorkspace() {
                 rows="3"
                 value={editorState.values.description}
                 onChange={(event) => updateForm(setEditorState, 'description', event.target.value)}
-              />
-            </Field>
-            <Field label="Image URL" full>
-              <input
-                value={editorState.values.imageUrl}
-                onChange={(event) => updateForm(setEditorState, 'imageUrl', event.target.value)}
               />
             </Field>
             <Field label="Features" full>
@@ -1226,7 +1257,8 @@ function makeInlineAssetImage(title, accent) {
 }
 
 function resolveAssetImage(asset) {
-  if (asset.imageUrl) return asset.imageUrl
+  const normalizedUrl = normalizeImageUrl(asset.imageUrl)
+  if (normalizedUrl) return normalizedUrl
 
   const text = [
     asset.name,
@@ -1254,6 +1286,24 @@ function resolveAssetImage(asset) {
   if (text.includes('lab')) return IMAGE_LIBRARY.labGeneral
 
   return IMAGE_LIBRARY.labGeneral
+}
+
+function normalizeImageUrl(url) {
+  const value = String(url || '').trim()
+  if (!value) return ''
+  if (value.startsWith('data:image/')) return value
+  if (value.startsWith('http://') || value.startsWith('https://')) return value
+  if (value.startsWith('//')) return `https:${value}`
+  if (value.startsWith('www.')) return `https://${value}`
+  return value
+}
+
+function handleAssetImageError(event, asset) {
+  const fallback = resolveAssetImage({ ...asset, imageUrl: '' })
+  if (event.currentTarget.src !== fallback) {
+    event.currentTarget.onerror = null
+    event.currentTarget.src = fallback
+  }
 }
 
 function buildQrPayload(asset) {
@@ -1323,34 +1373,35 @@ function normalizeAsset(resource) {
   }
 }
 
-function assetToPayload(asset = {}) {
+function assetToPayload(asset) {
+  const source = asset || {}
   return {
-    resourceCode: asset.resourceCode || '',
-    name: asset.name || '',
-    description: asset.description || '',
-    resourceType: asset.resourceType || 'EQUIPMENT',
-    category: asset.category || '',
-    capacity: Number(asset.capacity) || 0,
-    building: asset.building || '',
-    floorNumber: asset.floorNumber === '' || asset.floorNumber == null ? null : Number(asset.floorNumber),
-    roomNumber: asset.roomNumber || '',
-    locationText: asset.locationText || '',
-    availableFrom: asset.availableFrom || null,
-    availableTo: asset.availableTo || null,
-    status: asset.status || 'ACTIVE',
-    condition: asset.condition || 'GOOD',
-    borrowed: Boolean(asset.borrowed),
-    rating: Number(asset.rating) || 0,
-    lastServiceDate: asset.lastServiceDate || null,
-    nextServiceDate: asset.nextServiceDate || null,
-    totalBookings: Number(asset.totalBookings) || 0,
-    bookingsToday: Number(asset.bookingsToday) || 0,
-    amenities: asset.amenities || [],
-    monthlyBookings: normalizeMonthlyBookings(asset.monthlyBookings),
-    issues: asset.issues || [],
-    imageUrl: asset.imageUrl || '',
-    requiresApproval: Boolean(asset.requiresApproval),
-    isActive: asset.isActive ?? asset.status !== 'INACTIVE',
+    resourceCode: source.resourceCode || '',
+    name: source.name || '',
+    description: source.description || '',
+    resourceType: source.resourceType || 'EQUIPMENT',
+    category: source.category || '',
+    capacity: Number(source.capacity) || 0,
+    building: source.building || '',
+    floorNumber: source.floorNumber === '' || source.floorNumber == null ? null : Number(source.floorNumber),
+    roomNumber: source.roomNumber || '',
+    locationText: source.locationText || '',
+    availableFrom: source.availableFrom || null,
+    availableTo: source.availableTo || null,
+    status: source.status || 'ACTIVE',
+    condition: source.condition || 'GOOD',
+    borrowed: Boolean(source.borrowed),
+    rating: Number(source.rating) || 0,
+    lastServiceDate: source.lastServiceDate || null,
+    nextServiceDate: source.nextServiceDate || null,
+    totalBookings: Number(source.totalBookings) || 0,
+    bookingsToday: Number(source.bookingsToday) || 0,
+    amenities: source.amenities || [],
+    monthlyBookings: normalizeMonthlyBookings(source.monthlyBookings),
+    issues: source.issues || [],
+    imageUrl: source.imageUrl || '',
+    requiresApproval: Boolean(source.requiresApproval),
+    isActive: source.isActive ?? source.status !== 'INACTIVE',
   }
 }
 
@@ -1413,7 +1464,13 @@ function formToPayload(values, originalAsset) {
     totalBookings: Number(values.totalBookings) || 0,
     bookingsToday: Number(values.bookingsToday) || 0,
     amenities: values.amenities,
-    monthlyBookings: normalizeMonthlyBookings(originalAsset?.monthlyBookings),
+    monthlyBookings: normalizeMonthlyBookings(
+      String(values.monthlyBookings || '')
+        .split(',')
+        .map((value) => value.trim())
+        .filter((value) => value !== '')
+        .map((value) => Number(value) || 0),
+    ),
     issues: originalAsset?.issues || [],
     imageUrl: values.imageUrl.trim(),
     requiresApproval: Boolean(values.requiresApproval),
@@ -1462,13 +1519,17 @@ function generateNextResourceCode(assets) {
 }
 
 function sanitizeLetterInput(value) {
-  return value.replace(/[^A-Za-z\s]/g, '')
+  return value.replace(/[^A-Za-z0-9\s().,&/-]/g, '')
 }
 
 function sanitizeCapacityInput(value) {
   if (value === '') return ''
   const digitsOnly = value.replace(/[^\d]/g, '')
   return digitsOnly === '' ? '' : String(Number(digitsOnly))
+}
+
+function getCapacityLimit(resourceType) {
+  return CAPACITY_LIMITS[resourceType] ?? null
 }
 
 function preventNegativeNumberInput(event) {
@@ -1494,16 +1555,31 @@ function toggleFeature(setter, feature) {
 }
 
 function validateAssetForm(values) {
-  if (!/^[A-Za-z\s]+$/.test(values.name.trim())) {
-    return 'Name can contain letters only.'
+  if (!values.name.trim()) {
+    return 'Name is required.'
   }
 
-  if (!/^[A-Za-z\s]+$/.test(values.category.trim())) {
-    return 'Category can contain letters only.'
+  if (!values.category.trim()) {
+    return 'Category is required.'
   }
 
   if (values.capacity !== '' && Number(values.capacity) < 0) {
     return 'Capacity cannot be a negative number.'
+  }
+
+  const capacityLimit = getCapacityLimit(values.resourceType)
+  if (capacityLimit != null && values.capacity !== '' && Number(values.capacity) > capacityLimit) {
+    const label = TYPE_META[values.resourceType]?.label?.toLowerCase() || 'resource'
+    return `Capacity for ${label}s cannot be more than ${capacityLimit}.`
+  }
+
+  const isRoomBased = ['ROOM', 'LAB', 'LECTURE_HALL', 'MEETING_ROOM'].includes(values.resourceType)
+  if (isRoomBased && !values.building.trim()) {
+    return 'Building is required for room-based resources.'
+  }
+
+  if (isRoomBased && !values.roomNumber.trim()) {
+    return 'Room number is required for room-based resources.'
   }
 
   return ''

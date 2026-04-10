@@ -26,7 +26,14 @@ async function parseResponse(response) {
   }
 
   if (!response.ok) {
-    const message = data?.message || data?.error || 'Something went wrong'
+    const validationMessages = data?.messages && typeof data.messages === 'object'
+      ? Object.values(data.messages).filter(Boolean)
+      : []
+    const message =
+      validationMessages[0] ||
+      data?.message ||
+      data?.error ||
+      'Something went wrong'
     throw new Error(message)
   }
 
