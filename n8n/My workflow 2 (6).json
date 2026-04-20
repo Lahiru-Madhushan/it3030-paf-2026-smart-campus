@@ -1,0 +1,183 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a read-only MySQL assistant for campus_hub_db.\n\nYou must use the MySQL tool for any question about database data.\nDo not answer from memory.\nGIVE SHORT DIRECT ANSWER\nIf the user asks about users, admins, counts, tables, bookings, tickets, or any stored data, call the MySQL tool.\n\nRules:\n- Only use SELECT, SHOW, DESCRIBE\n- Never use INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE\n- If schema is unclear, first use SHOW TABLES or DESCRIBE\n- After getting tool results, answer briefly in plain English\n\nExamples:\n- \"How many registered users are there?\" -> use MySQL tool\n- \"How many admins are there?\" -> use MySQL tool\n- \"Show all users\" -> use MySQL tool\n- \"What tables exist?\" -> use MySQL tool\n\nUser question: {{ $json.body.message }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -128,
+        -128
+      ],
+      "id": "f51c39c0-774b-463f-aed7-5433cec6d98b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        80
+      ],
+      "id": "99fb7585-bbff-4889-839d-a0b51294b603",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "pnIGsUZBrUZKddez",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -128,
+        80
+      ],
+      "id": "4854afe7-6227-4066-9996-085d13aa7381",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to run read-only MySQL queries on campus_hub_db.\nUse it whenever the user asks about counts, lists, admins, users, bookings, tickets, resources, or any database data.\nAllowed SQL only: SELECT, SHOW, DESCRIBE.\nReturn the SQL in the query field.",
+        "operation": "executeQuery",
+        "query": "{{$fromAI(\"query\")}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySqlTool",
+      "typeVersion": 2.5,
+      "position": [
+        176,
+        80
+      ],
+      "id": "94e135d4-352e-41b8-a455-7c1205ae7468",
+      "name": "Execute a SQL query in MySQL",
+      "credentials": {
+        "mySql": {
+          "id": "BOyNUr8mll56tEDz",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "396f308f-99d2-4364-820f-2073c0349880",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        -128
+      ],
+      "id": "9cd3ae68-411e-4b49-9f0e-3996fac084ff",
+      "name": "Webhook",
+      "webhookId": "396f308f-99d2-4364-820f-2073c0349880"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        -128
+      ],
+      "id": "e7fa68b7-ac44-4586-b8c2-f15987cd90fc",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query in MySQL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "31ee0446-7269-466f-ae49-7a6beacc8281",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9984bfb5c74c292f0c408a676ce29f0543bcd5a93d97beac7d8f33ea9d6de1ac"
+  },
+  "id": "4noosxbM3HsKiys-ApKU7",
+  "tags": []
+}
