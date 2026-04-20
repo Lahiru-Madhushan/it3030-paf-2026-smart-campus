@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { authService } from '../../services/authService'
+import frontImage from '../../assets/front.jpg'
+import logo1 from '../../assets/logo1.png'
 
 export default function ForgotPasswordPage() {
   const [step, setStep] = useState(1)
@@ -12,6 +14,9 @@ export default function ForgotPasswordPage() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const inputClass =
+    'w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100'
 
   const handleSendOtp = async (event) => {
     event.preventDefault()
@@ -52,30 +57,41 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-yellow-50">
       <div className="grid min-h-screen lg:grid-cols-5">
-        {/* LEFT SIDE */}
-        <div className="relative hidden overflow-hidden lg:col-span-3 lg:block">
-          <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,rgba(255,255,255,0.65),rgba(243,244,246,0.55),rgba(254,249,195,0.35))]" />
+        {/* LEFT SIDE — same as RegisterPage */}
+        <div
+          className="relative hidden overflow-hidden lg:col-span-3 lg:flex lg:items-center lg:justify-center"
+          style={{
+            backgroundImage: `url(${frontImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div className="absolute inset-0 bg-black/45" />
 
-          <div className="relative z-10 flex h-full flex-col justify-between px-12 py-10">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-yellow-400 px-4 py-2 font-bold text-white shadow">
-                CH
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Campus Hub</h1>
-                <p className="text-sm text-gray-600">Smart campus management system</p>
+          <div className="relative z-10 px-10 text-center text-white">
+            <div className="mb-6 flex items-center justify-center gap-4">
+              <img
+                src={logo1}
+                alt="Campus Hub Logo"
+                className="h-20 w-20 object-contain drop-shadow-xl"
+              />
+
+              <div className="text-left">
+                <h1 className="text-3xl font-bold">Campus Hub</h1>
+                <p className="text-sm text-gray-200">Smart campus management system</p>
               </div>
             </div>
 
-            <div />
-
-            <div className="text-sm text-gray-500">Campus Hub © 2026</div>
+            <h2 className="text-4xl font-bold leading-tight md:text-5xl">
+              One platform for your campus
+            </h2>
           </div>
         </div>
 
         {/* RIGHT SIDE */}
-        <div className="flex items-center justify-center px-6 py-10 lg:col-span-2">
-          <div className="w-full max-w-md rounded-[2rem] border border-white/60 bg-white/85 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center justify-center p-0 lg:col-span-2">
+          <div className="w-full max-w-md rounded-[2rem] bg-white p-8 shadow-2xl">
             <div className="mb-8">
               <Link
                 to="/login"
@@ -84,7 +100,7 @@ export default function ForgotPasswordPage() {
                 ← Back to login
               </Link>
 
-              <h2 className="text-3xl font-bold text-gray-900">Forgot Password</h2>
+              <h2 className="text-3xl font-bold text-gray-900">Forgot password</h2>
               <p className="mt-2 text-sm text-gray-600">
                 Get an OTP to your email and set a new password securely.
               </p>
@@ -93,16 +109,14 @@ export default function ForgotPasswordPage() {
             {step === 1 && (
               <form className="space-y-5" onSubmit={handleSendOtp}>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">Email</label>
                   <input
                     type="email"
                     placeholder="Enter your registered email"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
-                    className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100"
+                    className={inputClass}
                   />
                 </div>
 
@@ -120,34 +134,37 @@ export default function ForgotPasswordPage() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-2xl bg-yellow-400 px-4 py-3 font-semibold text-white transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={loading}
+                  className="w-full rounded-2xl bg-[#0A192F] px-4 py-3 font-semibold text-white transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {loading ? 'Sending OTP...' : 'Send OTP'}
                 </button>
+
+                <p className="text-center text-sm text-gray-600">
+                  Remember your password?{' '}
+                  <Link to="/login" className="font-semibold text-yellow-600 hover:text-yellow-700">
+                    Login
+                  </Link>
+                </p>
               </form>
             )}
 
             {step === 2 && (
               <form className="space-y-5" onSubmit={handleResetPassword}>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    OTP Code
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">OTP Code</label>
                   <input
                     type="text"
                     placeholder="Enter OTP"
                     value={form.otp}
                     onChange={(e) => setForm({ ...form, otp: e.target.value })}
                     required
-                    className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100"
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    New Password
-                  </label>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">New Password</label>
                   <input
                     type="password"
                     placeholder="Enter new password"
@@ -155,8 +172,12 @@ export default function ForgotPasswordPage() {
                     value={form.newPassword}
                     onChange={(e) => setForm({ ...form, newPassword: e.target.value })}
                     required
-                    className="w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 outline-none transition focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100"
+                    className={inputClass}
                   />
+                </div>
+
+                <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+                  OTP sent to <strong>{form.email}</strong>. Enter the code and your new password.
                 </div>
 
                 {error && (
@@ -165,18 +186,12 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
 
-                {message && (
-                  <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                    {message}
-                  </div>
-                )}
-
                 <button
                   type="submit"
-                  className="w-full rounded-2xl bg-yellow-400 px-4 py-3 font-semibold text-white transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
                   disabled={loading}
+                  className="w-full rounded-2xl bg-[#0A192F] px-4 py-3 font-semibold text-white transition hover:bg-[#081425] disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  {loading ? 'Resetting...' : 'Reset Password'}
+                  {loading ? 'Resetting...' : 'Reset password'}
                 </button>
 
                 <button
@@ -197,9 +212,9 @@ export default function ForgotPasswordPage() {
 
                 <Link
                   to="/login"
-                  className="block w-full rounded-2xl bg-yellow-400 px-4 py-3 text-center font-semibold text-white transition hover:bg-yellow-500"
+                  className="block w-full rounded-2xl bg-[#0A192F] px-4 py-3 text-center font-semibold text-white transition hover:bg-[#081425]"
                 >
-                  Go to Login
+                  Go to login
                 </Link>
               </div>
             )}
